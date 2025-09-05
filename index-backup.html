@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shacker Game - Secure Version</title>
+    <title>Shacker Game</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -159,19 +159,6 @@
             display: flex;
             justify-content: space-between;
         }
-        
-        .secure-badge {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(135deg, #00ff88, #00ffcc);
-            color: #000;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            z-index: 200;
-        }
     </style>
 </head>
 <body>
@@ -184,9 +171,8 @@
         </div>
         
         <div id="syncStatus">🔄 Checking...</div>
-        <div class="secure-badge">🔒 SECURE API</div>
         
-        <!-- START SCREEN -->
+        <!-- START SCREEN MANDATORY FOR OPENSEA -->
         <div id="startScreen">
             <h1>SHACKER</h1>
             <input type="text" id="nameInput" placeholder="Enter your name" maxlength="20">
@@ -206,10 +192,7 @@
     </div>
     
     <script>
-        // SECURE VERSION - API Key hidden on server
-        
-        // API endpoint - will auto-detect Vercel deployment
-        var API_URL = '/api/scores';
+        // OPENSEA ULTRA COMPATIBLE VERSION - NO MODERN JS
         
         // Game variables
         var canvas = null;
@@ -236,32 +219,43 @@
         
         // Initialize when page loads
         window.onload = function() {
-            console.log('🔒 Secure Shacker loading...');
+            console.log('Game loading...');
             
+            // Get canvas
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
+            // Set canvas size
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            loadScores();
+            // Load saved scores
+            loadLocalScores();
             
+            // Add button click handlers
             document.getElementById('startBtn').onclick = startGame;
             document.getElementById('restartBtn').onclick = restartGame;
             
+            // Add mouse/touch controls
             setupControls();
             
-            console.log('Game ready with secure API!');
+            console.log('Game ready!');
         };
         
         function startGame() {
             console.log('Starting game...');
             
+            // Get player name
             playerName = document.getElementById('nameInput').value || 'Player';
+            console.log('Player name:', playerName);
             
+            // Hide start screen
             document.getElementById('startScreen').style.display = 'none';
+            
+            // Make sure game over is hidden
             document.getElementById('gameOverScreen').style.display = 'none';
             
+            // Reset game state
             score = 0;
             level = 1;
             enemies = [];
@@ -269,26 +263,37 @@
             particles = [];
             player.trail = [];
             
+            // Check canvas size
             if (canvas.width === 0 || canvas.height === 0) {
                 canvas.width = window.innerWidth || 800;
                 canvas.height = window.innerHeight || 600;
             }
+            console.log('Canvas size:', canvas.width, 'x', canvas.height);
             
+            // Center player
             player.x = canvas.width / 2;
             player.y = canvas.height / 2;
             player.size = 20;
+            console.log('Player position:', player.x, player.y);
             
+            // Create initial enemies
             for (var i = 0; i < 5; i++) {
                 spawnEnemy();
             }
+            console.log('Enemies created:', enemies.length);
             
+            // Create collectibles
             for (var j = 0; j < 3; j++) {
                 spawnCollectible();
             }
+            console.log('Collectibles created:', collectibles.length);
             
+            // Start game
             gameRunning = true;
+            console.log('Game is now running!');
             gameLoop();
             
+            // Start spawning enemies (only set interval once)
             if (!window.enemySpawnInterval) {
                 window.enemySpawnInterval = setInterval(function() {
                     if (gameRunning && enemies.length < 10 + level) {
@@ -299,6 +304,7 @@
         }
         
         function setupControls() {
+            // Mouse control with proper coordinate adjustment
             canvas.onmousemove = function(e) {
                 if (gameRunning) {
                     var rect = canvas.getBoundingClientRect();
@@ -310,6 +316,7 @@
                 }
             };
             
+            // Touch control with proper coordinate adjustment
             canvas.ontouchmove = function(e) {
                 if (gameRunning && e.touches[0]) {
                     e.preventDefault();
@@ -334,22 +341,22 @@
                 color: 'hsl(' + Math.floor(Math.random() * 60) + ', 100%, 50%)'
             };
             
-            if (side === 0) {
+            if (side === 0) { // Top
                 enemy.x = Math.random() * canvas.width;
                 enemy.y = enemy.size;
                 enemy.vx = (Math.random() - 0.5) * 2;
                 enemy.vy = Math.random() * 2 + 1;
-            } else if (side === 1) {
+            } else if (side === 1) { // Right
                 enemy.x = canvas.width - enemy.size;
                 enemy.y = Math.random() * canvas.height;
                 enemy.vx = -(Math.random() * 2 + 1);
                 enemy.vy = (Math.random() - 0.5) * 2;
-            } else if (side === 2) {
+            } else if (side === 2) { // Bottom
                 enemy.x = Math.random() * canvas.width;
                 enemy.y = canvas.height - enemy.size;
                 enemy.vx = (Math.random() - 0.5) * 2;
                 enemy.vy = -(Math.random() * 2 + 1);
-            } else {
+            } else { // Left
                 enemy.x = enemy.size;
                 enemy.y = Math.random() * canvas.height;
                 enemy.vx = Math.random() * 2 + 1;
@@ -387,17 +394,21 @@
         }
         
         function update() {
+            // Update player trail
             player.trail.push({x: player.x, y: player.y});
             if (player.trail.length > 20) {
                 player.trail.shift();
             }
             
+            // Update enemies
             for (var i = enemies.length - 1; i >= 0; i--) {
                 var enemy = enemies[i];
                 
+                // Move
                 enemy.x += enemy.vx;
                 enemy.y += enemy.vy;
                 
+                // Bounce off walls
                 if (enemy.x <= enemy.size || enemy.x >= canvas.width - enemy.size) {
                     enemy.vx = -enemy.vx;
                     enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
@@ -407,21 +418,26 @@
                     enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
                 }
                 
+                // Keep enemies in bounds
                 enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
                 enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
                 
+                // Collision with player (only if game is running)
                 if (gameRunning && player.x && player.y) {
                     var dx = enemy.x - player.x;
                     var dy = enemy.y - player.y;
                     var dist = Math.sqrt(dx * dx + dy * dy);
                     
                     if (dist < enemy.size + player.size) {
+                        // Game over
+                        console.log('Collision detected! Distance:', dist);
                         endGame();
                         return;
                     }
                 }
             }
             
+            // Update collectibles
             for (var j = collectibles.length - 1; j >= 0; j--) {
                 var collectible = collectibles[j];
                 
@@ -430,16 +446,20 @@
                 var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
                 
                 if (dist2 < collectible.size + player.size) {
+                    // Collect
                     score += collectible.value;
                     createParticles(collectible.x, collectible.y, collectible.color);
                     collectibles.splice(j, 1);
                     
+                    // Spawn new one after delay
                     setTimeout(spawnCollectible, 2000);
                     
+                    // Update UI
                     document.getElementById('score').textContent = 'Score: ' + score;
                 }
             }
             
+            // Update particles
             for (var k = particles.length - 1; k >= 0; k--) {
                 var particle = particles[k];
                 particle.x += particle.vx;
@@ -453,6 +473,7 @@
                 }
             }
             
+            // Level up
             if (score > level * 1000) {
                 level++;
                 document.getElementById('level').textContent = 'Level: ' + level;
@@ -461,9 +482,11 @@
         }
         
         function draw() {
+            // Clear
             ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
+            // Draw grid
             ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
             ctx.lineWidth = 1;
             
@@ -481,6 +504,7 @@
                 ctx.stroke();
             }
             
+            // Draw player trail
             for (var t = 0; t < player.trail.length; t++) {
                 var alpha = t / player.trail.length * 0.5;
                 ctx.fillStyle = 'rgba(0, 255, 204, ' + alpha + ')';
@@ -488,6 +512,7 @@
                 ctx.fillRect(point.x - player.size/2, point.y - player.size/2, player.size, player.size);
             }
             
+            // Draw player
             ctx.save();
             ctx.translate(player.x, player.y);
             ctx.rotate(Date.now() * 0.001);
@@ -495,6 +520,7 @@
             ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
             ctx.restore();
             
+            // Draw enemies
             for (var e = 0; e < enemies.length; e++) {
                 var enemy = enemies[e];
                 ctx.fillStyle = enemy.color;
@@ -503,6 +529,7 @@
                 ctx.fill();
             }
             
+            // Draw collectibles
             for (var c = 0; c < collectibles.length; c++) {
                 var collectible = collectibles[c];
                 ctx.save();
@@ -515,6 +542,7 @@
                 ctx.restore();
             }
             
+            // Draw particles
             for (var p = 0; p < particles.length; p++) {
                 var particle = particles[p];
                 ctx.fillStyle = 'rgba(255, 255, 0, ' + particle.life + ')';
@@ -535,11 +563,14 @@
             console.log('GAME OVER - Score:', score);
             gameRunning = false;
             
+            // Save score
             saveScore();
             
+            // Show game over
             document.getElementById('finalScore').textContent = 'Score: ' + score;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
+            // Display scores
             displayScores();
         }
         
@@ -548,68 +579,60 @@
             document.getElementById('startScreen').style.display = 'flex';
         }
         
-        // SECURE API Functions
         function saveScore() {
             var newScore = {
                 name: playerName,
                 score: score,
-                level: level
+                date: new Date().toISOString()
             };
             
-            document.getElementById('syncStatus').textContent = '⏳ Saving...';
+            // Load existing scores first to not lose them
+            loadLocalScores();
             
-            fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newScore)
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                console.log('✅ Score saved securely!', data);
-                document.getElementById('syncStatus').textContent = '🔒 Saved!';
-                loadScores();
-            })
-            .catch(function(error) {
-                console.log('Using fallback:', error);
-                saveLocalScore(newScore);
-                document.getElementById('syncStatus').textContent = '📱 Local';
+            // Add new score
+            globalScores.push(newScore);
+            
+            // Sort
+            globalScores.sort(function(a, b) {
+                return b.score - a.score;
             });
-        }
-        
-        function loadScores() {
-            fetch(API_URL)
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(scores) {
-                    globalScores = scores;
-                    console.log('✅ Loaded', scores.length, 'scores from secure API');
-                    document.getElementById('syncStatus').textContent = '🔒 Secure';
-                })
-                .catch(function(error) {
-                    console.log('Fallback to local:', error);
-                    loadLocalScores();
-                    document.getElementById('syncStatus').textContent = '📱 Local';
-                });
-        }
-        
-        function saveLocalScore(newScore) {
+            
+            // Keep top 50
+            globalScores = globalScores.slice(0, 50);
+            
+            // Always save to localStorage
             try {
-                var stored = localStorage.getItem('shackerScores');
-                var scores = stored ? JSON.parse(stored) : [];
-                scores.push(newScore);
-                scores.sort(function(a, b) {
-                    return b.score - a.score;
-                });
-                scores = scores.slice(0, 50);
-                localStorage.setItem('shackerScores', JSON.stringify(scores));
-                globalScores = scores;
+                localStorage.setItem('shackerScores', JSON.stringify(globalScores));
+                console.log('Scores saved to localStorage:', globalScores.length);
             } catch(e) {
-                console.log('Could not save locally');
+                console.log('Could not save scores to localStorage');
+            }
+            
+            // FORCE JSONBin save for global leaderboard
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('PUT', 'https://api.jsonbin.io/v3/b/68b08a1fd0ea881f40696e32', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('X-Access-Key', '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log('✅ GLOBAL LEADERBOARD UPDATED!');
+                            document.getElementById('syncStatus').textContent = '🌍 Global';
+                        } else {
+                            console.log('⚠️ Could not update global leaderboard');
+                            document.getElementById('syncStatus').textContent = '📱 Local';
+                        }
+                    }
+                };
+                xhr.onerror = function() {
+                    console.log('❌ Global sync blocked (OpenSea?)');
+                    document.getElementById('syncStatus').textContent = '📱 Local Only';
+                };
+                xhr.send(JSON.stringify(globalScores));
+            } catch(e) {
+                console.log('JSONBin blocked:', e);
+                document.getElementById('syncStatus').textContent = '📱 Local Only';
             }
         }
         
@@ -618,11 +641,73 @@
                 var stored = localStorage.getItem('shackerScores');
                 if (stored) {
                     globalScores = JSON.parse(stored);
+                    console.log('Loaded', globalScores.length, 'scores from localStorage');
                 } else {
+                    // Initialize with empty array if no scores
                     globalScores = [];
+                    console.log('No saved scores found, starting fresh');
                 }
             } catch(e) {
+                console.log('Could not load from localStorage');
                 globalScores = [];
+            }
+            
+            // Try to load from JSONBin too (merge scores)
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://api.jsonbin.io/v3/b/68b08a1fd0ea881f40696e32/latest', true);
+                xhr.setRequestHeader('X-Access-Key', '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            var jsonBinScores = response.record || [];
+                            console.log('Loaded', jsonBinScores.length, 'scores from JSONBin');
+                            
+                            // Merge with local scores
+                            if (jsonBinScores.length > 0) {
+                                mergeScores(jsonBinScores);
+                            }
+                        } catch(e) {
+                            console.log('Could not parse JSONBin response');
+                        }
+                    }
+                };
+                xhr.send();
+            } catch(e) {
+                console.log('JSONBin load skipped');
+            }
+        }
+        
+        function mergeScores(jsonBinScores) {
+            // Merge JSONBin scores with local scores
+            var allScores = globalScores.concat(jsonBinScores);
+            
+            // Remove duplicates (same name and score)
+            var uniqueScores = [];
+            var seen = {};
+            
+            for (var i = 0; i < allScores.length; i++) {
+                var key = allScores[i].name + '_' + allScores[i].score;
+                if (!seen[key]) {
+                    seen[key] = true;
+                    uniqueScores.push(allScores[i]);
+                }
+            }
+            
+            // Sort and keep top 50
+            uniqueScores.sort(function(a, b) {
+                return b.score - a.score;
+            });
+            
+            globalScores = uniqueScores.slice(0, 50);
+            
+            // Save merged scores to localStorage
+            try {
+                localStorage.setItem('shackerScores', JSON.stringify(globalScores));
+                console.log('Merged scores saved:', globalScores.length);
+            } catch(e) {
+                console.log('Could not save merged scores');
             }
         }
         
@@ -647,10 +732,12 @@
             document.getElementById('scoresList').innerHTML = html || 'No scores yet';
         }
         
-        console.log('🔒 Shacker Secure API Version');
+        // Log for debugging
+        console.log('Shacker OpenSea Ultra Safe Version');
         
+        // Check if in iframe
         if (window.parent !== window) {
-            console.log('Running in iframe (OpenSea compatible)');
+            console.log('Running in iframe (OpenSea mode)');
         }
     </script>
 </body>
