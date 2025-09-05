@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shacker Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        
+        body {
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            color: white;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #level {
+            font-size: 18px;
+            color: #00ffcc;
+            margin-top: 5px;
+        }
+        
+        #startScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,26,46,0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #startScreen h1 {
+            font-size: 60px;
+            color: #00ffcc;
+            margin-bottom: 30px;
+        }
+        
+        #nameInput {
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+            width: 300px;
+            max-width: 80%;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+        }
+        
+        #gameOverScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+        }
+        
+        #gameOverScreen h2 {
+            font-size: 48px;
+            color: #ff0088;
+            margin-bottom: 20px;
+        }
+        
+        #finalScore {
+            font-size: 32px;
+            color: #00ffcc;
+            margin-bottom: 20px;
+        }
+        
+        #leaderboard {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            max-width: 400px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        #leaderboard h3 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        #syncStatus {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #00ff88;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 200;
+        }
+        
+        .score-entry {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="level">Level: 1</div>
+        </div>
+        
+        <div id="syncStatus">🔄 Checking...</div>
+        
+        <!-- START SCREEN MANDATORY FOR OPENSEA -->
+        <div id="startScreen">
+            <h1>SHACKER</h1>
+            <input type="text" id="nameInput" placeholder="Enter your name" maxlength="20">
+            <button class="btn" id="startBtn">START GAME</button>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div id="gameOverScreen">
+            <h2>GAME OVER</h2>
+            <div id="finalScore">Score: 0</div>
+            <div id="leaderboard">
+                <h3>TOP SCORES</h3>
+                <div id="scoresList"></div>
+            </div>
+            <button class="btn" id="restartBtn">PLAY AGAIN</button>
+        </div>
+    </div>
+    
+    <script>
+        // OPENSEA ULTRA COMPATIBLE VERSION - NO MODERN JS
+        
+        // Game variables
+        var canvas = null;
+        var ctx = null;
+        var gameRunning = false;
+        var playerName = '';
+        var score = 0;
+        var level = 1;
+        var globalScores = [];
+        
+        // Player
+        var player = {
+            x: 0,
+            y: 0,
+            size: 20,
+            color: '#00ffcc',
+            trail: []
+        };
+        
+        // Enemies
+        var enemies = [];
+        var collectibles = [];
+        var particles = [];
+        
+        // Initialize when page loads
+        window.onload = function() {
+            console.log('Game loading...');
+            
+            // Get canvas
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Load saved scores
+            loadLocalScores();
+            
+            // Add button click handlers
+            document.getElementById('startBtn').onclick = startGame;
+            document.getElementById('restartBtn').onclick = restartGame;
+            
+            // Add mouse/touch controls
+            setupControls();
+            
+            console.log('Game ready!');
+        };
+        
+        function startGame() {
+            console.log('Starting game...');
+            
+            // Get player name
+            playerName = document.getElementById('nameInput').value || 'Player';
+            console.log('Player name:', playerName);
+            
+            // Hide start screen
+            document.getElementById('startScreen').style.display = 'none';
+            
+            // Make sure game over is hidden
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            // Reset game state
+            score = 0;
+            level = 1;
+            enemies = [];
+            collectibles = [];
+            particles = [];
+            player.trail = [];
+            
+            // Check canvas size
+            if (canvas.width === 0 || canvas.height === 0) {
+                canvas.width = window.innerWidth || 800;
+                canvas.height = window.innerHeight || 600;
+            }
+            console.log('Canvas size:', canvas.width, 'x', canvas.height);
+            
+            // Center player
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            player.size = 20;
+            console.log('Player position:', player.x, player.y);
+            
+            // Create initial enemies
+            for (var i = 0; i < 5; i++) {
+                spawnEnemy();
+            }
+            console.log('Enemies created:', enemies.length);
+            
+            // Create collectibles
+            for (var j = 0; j < 3; j++) {
+                spawnCollectible();
+            }
+            console.log('Collectibles created:', collectibles.length);
+            
+            // Start game
+            gameRunning = true;
+            console.log('Game is now running!');
+            gameLoop();
+            
+            // Start spawning enemies (only set interval once)
+            if (!window.enemySpawnInterval) {
+                window.enemySpawnInterval = setInterval(function() {
+                    if (gameRunning && enemies.length < 10 + level) {
+                        spawnEnemy();
+                    }
+                }, 2000);
+            }
+        }
+        
+        function setupControls() {
+            // Mouse control with proper coordinate adjustment
+            canvas.onmousemove = function(e) {
+                if (gameRunning) {
+                    var rect = canvas.getBoundingClientRect();
+                    var scaleX = canvas.width / rect.width;
+                    var scaleY = canvas.height / rect.height;
+                    
+                    player.x = (e.clientX - rect.left) * scaleX;
+                    player.y = (e.clientY - rect.top) * scaleY;
+                }
+            };
+            
+            // Touch control with proper coordinate adjustment
+            canvas.ontouchmove = function(e) {
+                if (gameRunning && e.touches[0]) {
+                    e.preventDefault();
+                    var rect = canvas.getBoundingClientRect();
+                    var scaleX = canvas.width / rect.width;
+                    var scaleY = canvas.height / rect.height;
+                    
+                    player.x = (e.touches[0].clientX - rect.left) * scaleX;
+                    player.y = (e.touches[0].clientY - rect.top) * scaleY;
+                }
+            };
+        }
+        
+        function spawnEnemy() {
+            var side = Math.floor(Math.random() * 4);
+            var enemy = {
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                size: 15 + Math.random() * 20,
+                color: 'hsl(' + Math.floor(Math.random() * 60) + ', 100%, 50%)'
+            };
+            
+            if (side === 0) { // Top
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = enemy.size;
+                enemy.vx = (Math.random() - 0.5) * 2;
+                enemy.vy = Math.random() * 2 + 1;
+            } else if (side === 1) { // Right
+                enemy.x = canvas.width - enemy.size;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = -(Math.random() * 2 + 1);
+                enemy.vy = (Math.random() - 0.5) * 2;
+            } else if (side === 2) { // Bottom
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = canvas.height - enemy.size;
+                enemy.vx = (Math.random() - 0.5) * 2;
+                enemy.vy = -(Math.random() * 2 + 1);
+            } else { // Left
+                enemy.x = enemy.size;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = Math.random() * 2 + 1;
+                enemy.vy = (Math.random() - 0.5) * 2;
+            }
+            
+            enemy.vx *= (1 + level * 0.2);
+            enemy.vy *= (1 + level * 0.2);
+            
+            enemies.push(enemy);
+        }
+        
+        function spawnCollectible() {
+            collectibles.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * (canvas.height - 40) + 20,
+                size: 10,
+                color: '#ffff00',
+                value: 100 * level
+            });
+        }
+        
+        function createParticles(x, y, color) {
+            for (var i = 0; i < 5; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    size: Math.random() * 3 + 1,
+                    color: color,
+                    life: 1
+                });
+            }
+        }
+        
+        function update() {
+            // Update player trail
+            player.trail.push({x: player.x, y: player.y});
+            if (player.trail.length > 20) {
+                player.trail.shift();
+            }
+            
+            // Update enemies
+            for (var i = enemies.length - 1; i >= 0; i--) {
+                var enemy = enemies[i];
+                
+                // Move
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+                
+                // Bounce off walls
+                if (enemy.x <= enemy.size || enemy.x >= canvas.width - enemy.size) {
+                    enemy.vx = -enemy.vx;
+                    enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
+                }
+                if (enemy.y <= enemy.size || enemy.y >= canvas.height - enemy.size) {
+                    enemy.vy = -enemy.vy;
+                    enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
+                }
+                
+                // Keep enemies in bounds
+                enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
+                enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
+                
+                // Collision with player (only if game is running)
+                if (gameRunning && player.x && player.y) {
+                    var dx = enemy.x - player.x;
+                    var dy = enemy.y - player.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < enemy.size + player.size) {
+                        // Game over
+                        console.log('Collision detected! Distance:', dist);
+                        endGame();
+                        return;
+                    }
+                }
+            }
+            
+            // Update collectibles
+            for (var j = collectibles.length - 1; j >= 0; j--) {
+                var collectible = collectibles[j];
+                
+                var dx2 = collectible.x - player.x;
+                var dy2 = collectible.y - player.y;
+                var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                
+                if (dist2 < collectible.size + player.size) {
+                    // Collect
+                    score += collectible.value;
+                    createParticles(collectible.x, collectible.y, collectible.color);
+                    collectibles.splice(j, 1);
+                    
+                    // Spawn new one after delay
+                    setTimeout(spawnCollectible, 2000);
+                    
+                    // Update UI
+                    document.getElementById('score').textContent = 'Score: ' + score;
+                }
+            }
+            
+            // Update particles
+            for (var k = particles.length - 1; k >= 0; k--) {
+                var particle = particles[k];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+                particle.life -= 0.02;
+                
+                if (particle.life <= 0) {
+                    particles.splice(k, 1);
+                }
+            }
+            
+            // Level up
+            if (score > level * 1000) {
+                level++;
+                document.getElementById('level').textContent = 'Level: ' + level;
+                spawnEnemy();
+            }
+        }
+        
+        function draw() {
+            // Clear
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
+            ctx.lineWidth = 1;
+            
+            var gridSize = 50;
+            for (var i = 0; i < canvas.width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (var j = 0; j < canvas.height; j += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, j);
+                ctx.lineTo(canvas.width, j);
+                ctx.stroke();
+            }
+            
+            // Draw player trail
+            for (var t = 0; t < player.trail.length; t++) {
+                var alpha = t / player.trail.length * 0.5;
+                ctx.fillStyle = 'rgba(0, 255, 204, ' + alpha + ')';
+                var point = player.trail[t];
+                ctx.fillRect(point.x - player.size/2, point.y - player.size/2, player.size, player.size);
+            }
+            
+            // Draw player
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(Date.now() * 0.001);
+            ctx.fillStyle = player.color;
+            ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+            ctx.restore();
+            
+            // Draw enemies
+            for (var e = 0; e < enemies.length; e++) {
+                var enemy = enemies[e];
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw collectibles
+            for (var c = 0; c < collectibles.length; c++) {
+                var collectible = collectibles[c];
+                ctx.save();
+                ctx.translate(collectible.x, collectible.y);
+                ctx.rotate(Date.now() * 0.005);
+                ctx.fillStyle = collectible.color;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = collectible.color;
+                ctx.fillRect(-collectible.size/2, -collectible.size/2, collectible.size, collectible.size);
+                ctx.restore();
+            }
+            
+            // Draw particles
+            for (var p = 0; p < particles.length; p++) {
+                var particle = particles[p];
+                ctx.fillStyle = 'rgba(255, 255, 0, ' + particle.life + ')';
+                ctx.fillRect(particle.x - particle.size/2, particle.y - particle.size/2, particle.size, particle.size);
+            }
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            update();
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function endGame() {
+            console.log('GAME OVER - Score:', score);
+            gameRunning = false;
+            
+            // Save score
+            saveScore();
+            
+            // Show game over
+            document.getElementById('finalScore').textContent = 'Score: ' + score;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            
+            // Display scores
+            displayScores();
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+        
+        function saveScore() {
+            var newScore = {
+                name: playerName,
+                score: score,
+                date: new Date().toISOString()
+            };
+            
+            // Load existing scores first to not lose them
+            loadLocalScores();
+            
+            // Add new score
+            globalScores.push(newScore);
+            
+            // Sort
+            globalScores.sort(function(a, b) {
+                return b.score - a.score;
+            });
+            
+            // Keep top 50
+            globalScores = globalScores.slice(0, 50);
+            
+            // Always save to localStorage
+            try {
+                localStorage.setItem('shackerScores', JSON.stringify(globalScores));
+                console.log('Scores saved to localStorage:', globalScores.length);
+            } catch(e) {
+                console.log('Could not save scores to localStorage');
+            }
+            
+            // FORCE JSONBin save for global leaderboard
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('PUT', 'https://api.jsonbin.io/v3/b/68b08a1fd0ea881f40696e32', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('X-Access-Key', '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log('✅ GLOBAL LEADERBOARD UPDATED!');
+                            document.getElementById('syncStatus').textContent = '🌍 Global';
+                        } else {
+                            console.log('⚠️ Could not update global leaderboard');
+                            document.getElementById('syncStatus').textContent = '📱 Local';
+                        }
+                    }
+                };
+                xhr.onerror = function() {
+                    console.log('❌ Global sync blocked (OpenSea?)');
+                    document.getElementById('syncStatus').textContent = '📱 Local Only';
+                };
+                xhr.send(JSON.stringify(globalScores));
+            } catch(e) {
+                console.log('JSONBin blocked:', e);
+                document.getElementById('syncStatus').textContent = '📱 Local Only';
+            }
+        }
+        
+        function loadLocalScores() {
+            try {
+                var stored = localStorage.getItem('shackerScores');
+                if (stored) {
+                    globalScores = JSON.parse(stored);
+                    console.log('Loaded', globalScores.length, 'scores from localStorage');
+                } else {
+                    // Initialize with empty array if no scores
+                    globalScores = [];
+                    console.log('No saved scores found, starting fresh');
+                }
+            } catch(e) {
+                console.log('Could not load from localStorage');
+                globalScores = [];
+            }
+            
+            // Try to load from JSONBin too (merge scores)
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://api.jsonbin.io/v3/b/68b08a1fd0ea881f40696e32/latest', true);
+                xhr.setRequestHeader('X-Access-Key', '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            var jsonBinScores = response.record || [];
+                            console.log('Loaded', jsonBinScores.length, 'scores from JSONBin');
+                            
+                            // Merge with local scores
+                            if (jsonBinScores.length > 0) {
+                                mergeScores(jsonBinScores);
+                            }
+                        } catch(e) {
+                            console.log('Could not parse JSONBin response');
+                        }
+                    }
+                };
+                xhr.send();
+            } catch(e) {
+                console.log('JSONBin load skipped');
+            }
+        }
+        
+        function mergeScores(jsonBinScores) {
+            // Merge JSONBin scores with local scores
+            var allScores = globalScores.concat(jsonBinScores);
+            
+            // Remove duplicates (same name and score)
+            var uniqueScores = [];
+            var seen = {};
+            
+            for (var i = 0; i < allScores.length; i++) {
+                var key = allScores[i].name + '_' + allScores[i].score;
+                if (!seen[key]) {
+                    seen[key] = true;
+                    uniqueScores.push(allScores[i]);
+                }
+            }
+            
+            // Sort and keep top 50
+            uniqueScores.sort(function(a, b) {
+                return b.score - a.score;
+            });
+            
+            globalScores = uniqueScores.slice(0, 50);
+            
+            // Save merged scores to localStorage
+            try {
+                localStorage.setItem('shackerScores', JSON.stringify(globalScores));
+                console.log('Merged scores saved:', globalScores.length);
+            } catch(e) {
+                console.log('Could not save merged scores');
+            }
+        }
+        
+        function displayScores() {
+            var html = '';
+            var top10 = globalScores.slice(0, 10);
+            
+            for (var i = 0; i < top10.length; i++) {
+                var entry = top10[i];
+                var medal = '';
+                if (i === 0) medal = '🥇';
+                else if (i === 1) medal = '🥈';
+                else if (i === 2) medal = '🥉';
+                else medal = (i + 1) + '.';
+                
+                html += '<div class="score-entry">';
+                html += '<span>' + medal + ' ' + entry.name + '</span>';
+                html += '<span>' + entry.score + '</span>';
+                html += '</div>';
+            }
+            
+            document.getElementById('scoresList').innerHTML = html || 'No scores yet';
+        }
+        
+        // Log for debugging
+        console.log('Shacker OpenSea Ultra Safe Version');
+        
+        // Check if in iframe
+        if (window.parent !== window) {
+            console.log('Running in iframe (OpenSea mode)');
+        }
+    </script>
+</body>
+</html>
