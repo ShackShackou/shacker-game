@@ -1,0 +1,17 @@
+# Configuration Netlify
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+# Headers pour sécurité et performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    X-Content-Type-Options = "nosniff"
+
+# Redirection pour l'API
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
