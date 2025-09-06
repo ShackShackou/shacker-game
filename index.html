@@ -580,14 +580,20 @@
             console.log('GAME OVER - Score:', score);
             gameRunning = false;
             
+            // Save score and wait for it to complete before displaying
             saveScore();
             
             document.getElementById('finalScore').textContent = 'Score: ' + score;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
-            // Reset to first page for game over screen
-            gameOverPage = 1;
-            displayScores();
+            // Wait a bit for score to be saved, then reload scores
+            setTimeout(function() {
+                loadScores();
+                setTimeout(function() {
+                    gameOverPage = 1;
+                    displayScores();
+                }, 500);
+            }, 1000);
         }
         
         function restartGame() {
