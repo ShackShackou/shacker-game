@@ -218,9 +218,10 @@
         <div id="gameOverScreen">
             <h2>GAME OVER</h2>
             <div id="finalScore">Score: 0</div>
-            <div id="leaderboard">
+            <div id="leaderboard" style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; margin: 20px; width: 380px; height: 340px; display: flex; flex-direction: column;">
                 <h3>TOP SCORES</h3>
-                <div id="scoresList"></div>
+                <div id="scoresList" style="flex: 1;"></div>
+                <div id="gameOverPagination" class="pagination"></div>
             </div>
             <button class="btn" id="restartBtn">PLAY AGAIN</button>
         </div>
@@ -228,8 +229,8 @@
         <!-- SCORES VIEW SCREEN -->
         <div id="scoresViewScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(26,26,46,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white;">
             <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h2>
-            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; min-width: 350px; max-width: 450px;">
-                <div id="scoresList2"></div>
+            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div id="scoresList2" style="height: 320px;"></div>
                 <div id="pagination" class="pagination"></div>
             </div>
             <button class="btn" onclick="document.getElementById('scoresViewScreen').style.display='none'; document.getElementById('startScreen').style.display='flex';">BACK TO MENU</button>
@@ -572,6 +573,8 @@
             document.getElementById('finalScore').textContent = 'Score: ' + score;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
+            // Reset to first page for game over screen
+            gameOverPage = 1;
             displayScores();
         }
         
@@ -601,24 +604,37 @@
             var pageScores = globalScores.slice(startIdx, endIdx);
             
             var html = '';
-            for (var i = 0; i < pageScores.length; i++) {
-                var entry = pageScores[i];
+            
+            // Always show 5 slots
+            for (var i = 0; i < scoresPerPage; i++) {
                 var position = startIdx + i;
-                var medal = '';
                 
-                if (position === 0) medal = '🥇';
-                else if (position === 1) medal = '🥈';
-                else if (position === 2) medal = '🥉';
-                else medal = (position + 1) + '.';
-                
-                html += '<div class="score-entry">';
-                html += '<span>' + medal + ' ' + entry.name + '</span>';
-                html += '<span>' + entry.score + '</span>';
-                html += '</div>';
+                if (i < pageScores.length) {
+                    var entry = pageScores[i];
+                    var medal = '';
+                    
+                    if (position === 0) medal = '🥇';
+                    else if (position === 1) medal = '🥈';
+                    else if (position === 2) medal = '🥉';
+                    else medal = (position + 1) + '.';
+                    
+                    html += '<div class="score-entry">';
+                    html += '<span style="min-width: 200px;">' + medal + ' ' + entry.name + '</span>';
+                    html += '<span>' + entry.score + '</span>';
+                    html += '</div>';
+                } else {
+                    // Empty slot
+                    html += '<div class="score-entry" style="visibility: hidden;">';
+                    html += '<span style="min-width: 200px;">-</span>';
+                    html += '<span>-</span>';
+                    html += '</div>';
+                }
             }
             
             if (globalScores.length === 0) {
-                html = '<p style="text-align: center; color: #888; padding: 20px;">No scores yet. Be the first!</p>';
+                html = '<div style="height: 320px; display: flex; align-items: center; justify-content: center;">';
+                html += '<p style="text-align: center; color: #888;">No scores yet. Be the first!</p>';
+                html += '</div>';
             }
             
             document.getElementById('scoresList2').innerHTML = html;
@@ -734,25 +750,64 @@
             }
         }
         
+        var gameOverPage = 1;
+        
         function displayScores() {
-            var html = '';
-            var top5 = globalScores.slice(0, 5);
+            var startIdx = (gameOverPage - 1) * scoresPerPage;
+            var endIdx = startIdx + scoresPerPage;
+            var pageScores = globalScores.slice(startIdx, endIdx);
             
-            for (var i = 0; i < top5.length; i++) {
-                var entry = top5[i];
-                var medal = '';
-                if (i === 0) medal = '🥇';
-                else if (i === 1) medal = '🥈';
-                else if (i === 2) medal = '🥉';
-                else medal = (i + 1) + '.';
+            var html = '';
+            
+            // Always show 5 slots
+            for (var i = 0; i < scoresPerPage; i++) {
+                var position = startIdx + i;
                 
-                html += '<div class="score-entry">';
-                html += '<span>' + medal + ' ' + entry.name + '</span>';
-                html += '<span>' + entry.score + '</span>';
+                if (i < pageScores.length) {
+                    var entry = pageScores[i];
+                    var medal = '';
+                    
+                    if (position === 0) medal = '🥇';
+                    else if (position === 1) medal = '🥈';
+                    else if (position === 2) medal = '🥉';
+                    else medal = (position + 1) + '.';
+                    
+                    html += '<div class="score-entry">';
+                    html += '<span style="min-width: 180px;">' + medal + ' ' + entry.name + '</span>';
+                    html += '<span>' + entry.score + '</span>';
+                    html += '</div>';
+                } else {
+                    // Empty slot
+                    html += '<div class="score-entry" style="visibility: hidden;">';
+                    html += '<span style="min-width: 180px;">-</span>';
+                    html += '<span>-</span>';
+                    html += '</div>';
+                }
+            }
+            
+            if (globalScores.length === 0) {
+                html = '<div style="height: 240px; display: flex; align-items: center; justify-content: center;">';
+                html += '<p style="text-align: center; color: #888;">No scores yet</p>';
                 html += '</div>';
             }
             
-            document.getElementById('scoresList').innerHTML = html || '<p style="text-align: center; color: #888;">No scores yet</p>';
+            document.getElementById('scoresList').innerHTML = html;
+            
+            // Create pagination for game over screen
+            var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
+            var paginationHtml = '';
+            
+            if (gameOverPage > 1) {
+                paginationHtml += '<button class="page-btn" onclick="gameOverPage--; displayScores();">◀</button>';
+            }
+            
+            paginationHtml += '<span style="color: #888; margin: 0 15px;">Page ' + gameOverPage + '/' + totalPages + '</span>';
+            
+            if (gameOverPage < totalPages) {
+                paginationHtml += '<button class="page-btn" onclick="gameOverPage++; displayScores();">▶</button>';
+            }
+            
+            document.getElementById('gameOverPagination').innerHTML = paginationHtml;
         }
         
         console.log('🔒 Shacker Secure Proxy Version');
