@@ -130,7 +130,7 @@
             margin: 20px;
             max-width: 400px;
             max-height: 300px;
-            overflow-y: auto;
+            overflow: hidden;
         }
         
         #leaderboard h3 {
@@ -152,12 +152,46 @@
         }
         
         .score-entry {
-            padding: 8px;
-            margin: 5px 0;
+            padding: 10px 15px;
+            margin: 8px 0;
             background: rgba(255,255,255,0.1);
-            border-radius: 5px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+        }
+        
+        .score-entry span:last-child {
+            font-weight: bold;
+            color: #00ffcc;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .page-btn {
+            padding: 8px 16px;
+            background: rgba(102,126,234,0.3);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .page-btn:hover {
+            background: rgba(102,126,234,0.5);
+        }
+        
+        .page-btn.active {
+            background: #667eea;
         }
     </style>
 </head>
@@ -194,8 +228,9 @@
         <!-- SCORES VIEW SCREEN -->
         <div id="scoresViewScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(26,26,46,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white;">
             <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h2>
-            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; margin: 20px; max-width: 400px; max-height: 400px; overflow-y: auto;">
+            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; min-width: 350px; max-width: 450px;">
                 <div id="scoresList2"></div>
+                <div id="pagination" class="pagination"></div>
             </div>
             <button class="btn" onclick="document.getElementById('scoresViewScreen').style.display='none'; document.getElementById('startScreen').style.display='flex';">BACK TO MENU</button>
         </div>
@@ -545,6 +580,9 @@
             document.getElementById('startScreen').style.display = 'flex';
         }
         
+        var currentPage = 1;
+        var scoresPerPage = 5;
+        
         function viewScores() {
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('scoresViewScreen').style.display = 'flex';
@@ -552,17 +590,26 @@
             // Refresh scores before showing
             loadScores();
             
-            // Display scores in the view screen
-            var html = '';
-            var top10 = globalScores.slice(0, 10);
+            // Reset to first page
+            currentPage = 1;
+            displayScorePage();
+        }
+        
+        function displayScorePage() {
+            var startIdx = (currentPage - 1) * scoresPerPage;
+            var endIdx = startIdx + scoresPerPage;
+            var pageScores = globalScores.slice(startIdx, endIdx);
             
-            for (var i = 0; i < top10.length; i++) {
-                var entry = top10[i];
+            var html = '';
+            for (var i = 0; i < pageScores.length; i++) {
+                var entry = pageScores[i];
+                var position = startIdx + i;
                 var medal = '';
-                if (i === 0) medal = '🥇';
-                else if (i === 1) medal = '🥈';
-                else if (i === 2) medal = '🥉';
-                else medal = (i + 1) + '.';
+                
+                if (position === 0) medal = '🥇';
+                else if (position === 1) medal = '🥈';
+                else if (position === 2) medal = '🥉';
+                else medal = (position + 1) + '.';
                 
                 html += '<div class="score-entry">';
                 html += '<span>' + medal + ' ' + entry.name + '</span>';
@@ -570,7 +617,27 @@
                 html += '</div>';
             }
             
-            document.getElementById('scoresList2').innerHTML = html || '<p style="text-align: center; color: #888;">No scores yet. Be the first!</p>';
+            if (globalScores.length === 0) {
+                html = '<p style="text-align: center; color: #888; padding: 20px;">No scores yet. Be the first!</p>';
+            }
+            
+            document.getElementById('scoresList2').innerHTML = html;
+            
+            // Create pagination buttons
+            var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
+            var paginationHtml = '';
+            
+            if (currentPage > 1) {
+                paginationHtml += '<button class="page-btn" onclick="currentPage--; displayScorePage();">◀</button>';
+            }
+            
+            paginationHtml += '<span style="color: #888; margin: 0 15px;">Page ' + currentPage + '/' + totalPages + '</span>';
+            
+            if (currentPage < totalPages) {
+                paginationHtml += '<button class="page-btn" onclick="currentPage++; displayScorePage();">▶</button>';
+            }
+            
+            document.getElementById('pagination').innerHTML = paginationHtml;
         }
         
         // SECURE PROXY API Functions
@@ -669,10 +736,10 @@
         
         function displayScores() {
             var html = '';
-            var top10 = globalScores.slice(0, 10);
+            var top5 = globalScores.slice(0, 5);
             
-            for (var i = 0; i < top10.length; i++) {
-                var entry = top10[i];
+            for (var i = 0; i < top5.length; i++) {
+                var entry = top5[i];
                 var medal = '';
                 if (i === 0) medal = '🥇';
                 else if (i === 1) medal = '🥈';
@@ -685,7 +752,7 @@
                 html += '</div>';
             }
             
-            document.getElementById('scoresList').innerHTML = html || 'No scores yet';
+            document.getElementById('scoresList').innerHTML = html || '<p style="text-align: center; color: #888;">No scores yet</p>';
         }
         
         console.log('🔒 Shacker Secure Proxy Version');
