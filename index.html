@@ -124,13 +124,16 @@
         }
         
         #leaderboard {
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px;
-            max-width: 400px;
-            max-height: 300px;
-            overflow: hidden;
+            background: rgba(0,0,0,0.8) !important;
+            padding: 25px !important;
+            border-radius: 15px !important;
+            margin: 20px !important;
+            width: 400px !important;
+            height: 380px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            overflow: visible !important;
         }
         
         #leaderboard h3 {
@@ -179,8 +182,10 @@
         .pagination {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 10px;
             margin-top: 15px;
+            min-height: 40px;
         }
         
         .page-btn {
@@ -223,12 +228,12 @@
         
         <!-- GAME OVER SCREEN -->
         <div id="gameOverScreen">
-            <h2>GAME OVER</h2>
-            <div id="finalScore">Score: 0</div>
-            <div id="leaderboard" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
-                <h3>TOP SCORES</h3>
-                <div id="scoresList" style="height: 320px;"></div>
-                <div id="gameOverPagination" class="pagination"></div>
+            <h2 style="font-size: 48px; color: #ff0088; margin-bottom: 10px;">GAME OVER</h2>
+            <div id="finalScore" style="font-size: 32px; color: #00ffcc; margin-bottom: 20px;">Score: 0</div>
+            <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h3>
+            <div style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 320px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div id="scoresList" style="height: 260px;"></div>
+                <div id="gameOverPagination" class="pagination" style="margin-top: 10px;"></div>
             </div>
             <button class="btn" id="restartBtn">PLAY AGAIN</button>
         </div>
@@ -658,7 +663,7 @@
             
             // Create pagination buttons
             var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
-            var paginationHtml = '';
+            var paginationHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;">';
             
             if (currentPage > 1) {
                 paginationHtml += '<button class="page-btn" onclick="currentPage--; displayScorePage();">◀</button>';
@@ -666,7 +671,7 @@
                 paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
             }
             
-            paginationHtml += '<span style="color: #888; margin: 0 15px;">Page ' + currentPage + '/' + totalPages + '</span>';
+            paginationHtml += '<span style="color: #888; margin: 0 15px; min-width: 100px; text-align: center;">Page ' + currentPage + '/' + totalPages + '</span>';
             
             if (currentPage < totalPages) {
                 paginationHtml += '<button class="page-btn" onclick="currentPage++; displayScorePage();">▶</button>';
@@ -674,6 +679,7 @@
                 paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
             }
             
+            paginationHtml += '</div>';
             document.getElementById('pagination').innerHTML = paginationHtml;
         }
         
@@ -817,7 +823,7 @@
             }
             
             if (globalScores.length === 0) {
-                html = '<div style="height: 320px; display: flex; align-items: center; justify-content: center;">';
+                html = '<div style="height: 260px; display: flex; align-items: center; justify-content: center;">';
                 html += '<p style="text-align: center; color: #888;">No scores yet</p>';
                 html += '</div>';
             }
@@ -826,7 +832,7 @@
             
             // Create pagination for game over screen
             var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
-            var paginationHtml = '';
+            var paginationHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;">';
             
             if (gameOverPage > 1) {
                 paginationHtml += '<button class="page-btn" onclick="gameOverPage--; displayScores();">◀</button>';
@@ -834,7 +840,7 @@
                 paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
             }
             
-            paginationHtml += '<span style="color: #888; margin: 0 15px;">Page ' + gameOverPage + '/' + totalPages + '</span>';
+            paginationHtml += '<span style="color: #888; margin: 0 15px; min-width: 100px; text-align: center;">Page ' + gameOverPage + '/' + totalPages + '</span>';
             
             if (gameOverPage < totalPages) {
                 paginationHtml += '<button class="page-btn" onclick="gameOverPage++; displayScores();">▶</button>';
@@ -842,6 +848,7 @@
                 paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
             }
             
+            paginationHtml += '</div>';
             document.getElementById('gameOverPagination').innerHTML = paginationHtml;
         }
         
