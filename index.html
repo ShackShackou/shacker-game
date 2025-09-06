@@ -662,12 +662,16 @@
             
             if (currentPage > 1) {
                 paginationHtml += '<button class="page-btn" onclick="currentPage--; displayScorePage();">◀</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
             }
             
             paginationHtml += '<span style="color: #888; margin: 0 15px;">Page ' + currentPage + '/' + totalPages + '</span>';
             
             if (currentPage < totalPages) {
                 paginationHtml += '<button class="page-btn" onclick="currentPage++; displayScorePage();">▶</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
             }
             
             document.getElementById('pagination').innerHTML = paginationHtml;
