@@ -826,12 +826,16 @@
             
             if (gameOverPage > 1) {
                 paginationHtml += '<button class="page-btn" onclick="gameOverPage--; displayScores();">◀</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
             }
             
             paginationHtml += '<span style="color: #888; margin: 0 15px;">Page ' + gameOverPage + '/' + totalPages + '</span>';
             
             if (gameOverPage < totalPages) {
                 paginationHtml += '<button class="page-btn" onclick="gameOverPage++; displayScores();">▶</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
             }
             
             document.getElementById('gameOverPagination').innerHTML = paginationHtml;
