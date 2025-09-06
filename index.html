@@ -160,6 +160,13 @@
             justify-content: space-between;
             align-items: center;
             font-size: 18px;
+            height: 45px;
+        }
+        
+        .score-entry span:first-child {
+            display: flex;
+            align-items: center;
+            min-width: 200px;
         }
         
         .score-entry span:last-child {
@@ -612,20 +619,30 @@
                 if (i < pageScores.length) {
                     var entry = pageScores[i];
                     var medal = '';
+                    var medalStyle = '';
                     
-                    if (position === 0) medal = '🥇';
-                    else if (position === 1) medal = '🥈';
-                    else if (position === 2) medal = '🥉';
-                    else medal = (position + 1) + '.';
+                    if (position === 0) {
+                        medal = '🥇';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 1) {
+                        medal = '🥈';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 2) {
+                        medal = '🥉';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else {
+                        medal = (position + 1) + '.';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    }
                     
                     html += '<div class="score-entry">';
-                    html += '<span style="min-width: 200px;">' + medal + ' ' + entry.name + '</span>';
+                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + entry.name + '</span>';
                     html += '<span>' + entry.score + '</span>';
                     html += '</div>';
                 } else {
                     // Empty slot
                     html += '<div class="score-entry" style="visibility: hidden;">';
-                    html += '<span style="min-width: 200px;">-</span>';
+                    html += '<span>-</span>';
                     html += '<span>-</span>';
                     html += '</div>';
                 }
@@ -766,20 +783,30 @@
                 if (i < pageScores.length) {
                     var entry = pageScores[i];
                     var medal = '';
+                    var medalStyle = '';
                     
-                    if (position === 0) medal = '🥇';
-                    else if (position === 1) medal = '🥈';
-                    else if (position === 2) medal = '🥉';
-                    else medal = (position + 1) + '.';
+                    if (position === 0) {
+                        medal = '🥇';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 1) {
+                        medal = '🥈';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 2) {
+                        medal = '🥉';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else {
+                        medal = (position + 1) + '.';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    }
                     
                     html += '<div class="score-entry">';
-                    html += '<span style="min-width: 180px;">' + medal + ' ' + entry.name + '</span>';
+                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + entry.name + '</span>';
                     html += '<span>' + entry.score + '</span>';
                     html += '</div>';
                 } else {
                     // Empty slot
                     html += '<div class="score-entry" style="visibility: hidden;">';
-                    html += '<span style="min-width: 180px;">-</span>';
+                    html += '<span>-</span>';
                     html += '<span>-</span>';
                     html += '</div>';
                 }
