@@ -580,20 +580,23 @@
             console.log('GAME OVER - Score:', score);
             gameRunning = false;
             
-            // Save score and wait for it to complete before displaying
+            // Save score
             saveScore();
             
             document.getElementById('finalScore').textContent = 'Score: ' + score;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
-            // Wait a bit for score to be saved, then reload scores
+            // Show loading message immediately
+            document.getElementById('scoresList').innerHTML = '<div style="height: 260px; display: flex; align-items: center; justify-content: center;"><p style="color: #888;">⏳ Loading scores...</p></div>';
+            gameOverPage = 1;
+            
+            // Reload scores after short delay
             setTimeout(function() {
                 loadScores();
                 setTimeout(function() {
-                    gameOverPage = 1;
                     displayScores();
-                }, 500);
-            }, 1000);
+                }, 300);
+            }, 400);
         }
         
         function restartGame() {
