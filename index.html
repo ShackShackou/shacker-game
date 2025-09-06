@@ -580,23 +580,34 @@
             console.log('GAME OVER - Score:', score);
             gameRunning = false;
             
-            // Save score
+            // Add the new score to local array immediately
+            var newScore = {
+                name: playerName,
+                score: score,
+                level: level
+            };
+            
+            // Save score to server
             saveScore();
             
             document.getElementById('finalScore').textContent = 'Score: ' + score;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
-            // Show loading message immediately
-            document.getElementById('scoresList').innerHTML = '<div style="height: 260px; display: flex; align-items: center; justify-content: center;"><p style="color: #888;">⏳ Loading scores...</p></div>';
-            gameOverPage = 1;
+            // Add new score to global array for immediate display
+            globalScores.push(newScore);
+            globalScores.sort(function(a, b) {
+                return b.score - a.score;
+            });
+            globalScores = globalScores.slice(0, 100);
             
-            // Reload scores after short delay
+            // Display immediately with local data
+            gameOverPage = 1;
+            displayScores();
+            
+            // Then refresh from server to sync
             setTimeout(function() {
                 loadScores();
-                setTimeout(function() {
-                    displayScores();
-                }, 300);
-            }, 400);
+            }, 1000);
         }
         
         function restartGame() {
@@ -738,9 +749,26 @@
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
-                        globalScores = JSON.parse(xhr.responseText);
-                        console.log('✅ Loaded', globalScores.length, 'scores from secure proxy');
-                        document.getElementById('syncStatus').textContent = '🌍 Global';
+                        try {
+                            var newScores = JSON.parse(xhr.responseText);
+                            // Only update if we got valid data
+                            if (Array.isArray(newScores) && newScores.length > 0) {
+                                globalScores = newScores;
+                                console.log('✅ Loaded', globalScores.length, 'scores from secure proxy');
+                                document.getElementById('syncStatus').textContent = '🌍 Global';
+                                // Update display if on scores screen
+                                if (document.getElementById('gameOverScreen').style.display === 'flex') {
+                                    displayScores();
+                                }
+                                if (document.getElementById('scoresViewScreen').style.display === 'flex') {
+                                    displayScorePage();
+                                }
+                            } else {
+                                console.log('Empty response, keeping existing scores');
+                            }
+                        } catch(e) {
+                            console.log('Parse error, keeping existing scores');
+                        }
                     } else {
                         loadLocalScores();
                         document.getElementById('syncStatus').textContent = '📱 Local';
