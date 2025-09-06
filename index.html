@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shacker Game - OpenSea Version</title>
+    <title>Shacker Game - Secure Proxy Version</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -160,12 +160,12 @@
             justify-content: space-between;
         }
         
-        .opensea-badge {
+        .secure-badge {
             position: fixed;
             top: 10px;
             right: 10px;
-            background: linear-gradient(135deg, #2081e2, #1868b7);
-            color: white;
+            background: linear-gradient(135deg, #00ff88, #00ffcc);
+            color: #000;
             padding: 5px 10px;
             border-radius: 20px;
             font-size: 12px;
@@ -184,7 +184,7 @@
         </div>
         
         <div id="syncStatus">🔄 Checking...</div>
-        <div class="opensea-badge">⛵ OPENSEA</div>
+        <div class="secure-badge">🔒 SECURE PROXY</div>
         
         <!-- START SCREEN -->
         <div id="startScreen">
@@ -206,11 +206,10 @@
     </div>
     
     <script>
-        // OPENSEA OPTIMIZED VERSION - Direct JSONBin API calls
-        // Since OpenSea blocks external API calls, we use direct JSONBin
+        // SECURE PROXY VERSION - API Key hidden on server
         
-        var JSONBIN_BIN_ID = '68b08a1fd0ea881f40696e32';
-        var JSONBIN_API_KEY = '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O';
+        // API endpoint - Using your secure proxy
+        var API_URL = 'https://shacker-proxy.onrender.com/scores';
         
         // Game variables
         var canvas = null;
@@ -237,7 +236,7 @@
         
         // Initialize when page loads
         window.onload = function() {
-            console.log('⛵ Shacker OpenSea Version loading...');
+            console.log('🔒 Shacker Secure Proxy loading...');
             
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
@@ -252,7 +251,7 @@
             
             setupControls();
             
-            console.log('Game ready for OpenSea!');
+            console.log('Game ready with secure proxy!');
         };
         
         function startGame() {
@@ -549,98 +548,64 @@
             document.getElementById('startScreen').style.display = 'flex';
         }
         
-        // Direct JSONBin API Functions (since Vercel API doesn't work in OpenSea iframe)
+        // SECURE PROXY API Functions
         function saveScore() {
             var newScore = {
                 name: playerName,
                 score: score,
-                date: new Date().toISOString()
+                level: level
             };
             
             document.getElementById('syncStatus').textContent = '⏳ Saving...';
             
-            // First load existing scores
+            // Use XMLHttpRequest for better compatibility
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID + '/latest', true);
-            xhr.setRequestHeader('X-Access-Key', JSONBIN_API_KEY);
+            xhr.open('POST', API_URL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
             
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    try {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
                         var response = JSON.parse(xhr.responseText);
-                        var scores = response.record || [];
-                        
-                        // Add new score
-                        scores.push(newScore);
-                        
-                        // Sort and keep top 100
-                        scores.sort(function(a, b) {
-                            return b.score - a.score;
-                        });
-                        scores = scores.slice(0, 100);
-                        
-                        // Save back to JSONBin
-                        var saveXhr = new XMLHttpRequest();
-                        saveXhr.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID, true);
-                        saveXhr.setRequestHeader('Content-Type', 'application/json');
-                        saveXhr.setRequestHeader('X-Access-Key', JSONBIN_API_KEY);
-                        
-                        saveXhr.onreadystatechange = function() {
-                            if (saveXhr.readyState === 4) {
-                                if (saveXhr.status === 200) {
-                                    console.log('✅ Score saved globally!');
-                                    document.getElementById('syncStatus').textContent = '🌍 Global';
-                                    globalScores = scores;
-                                    displayScores();
-                                } else {
-                                    saveLocalScore(newScore);
-                                    document.getElementById('syncStatus').textContent = '📱 Local';
-                                }
-                            }
-                        };
-                        
-                        saveXhr.send(JSON.stringify(scores));
-                    } catch(e) {
+                        console.log('✅ Score saved securely!', response);
+                        document.getElementById('syncStatus').textContent = '🌍 Global';
+                        loadScores();
+                    } else {
+                        console.log('Using fallback');
                         saveLocalScore(newScore);
                         document.getElementById('syncStatus').textContent = '📱 Local';
                     }
-                } else if (xhr.readyState === 4) {
-                    saveLocalScore(newScore);
-                    document.getElementById('syncStatus').textContent = '📱 Local';
                 }
             };
             
             xhr.onerror = function() {
+                console.log('Network error, using fallback');
                 saveLocalScore(newScore);
                 document.getElementById('syncStatus').textContent = '📱 Local';
             };
             
-            xhr.send();
+            xhr.send(JSON.stringify(newScore));
         }
         
         function loadScores() {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID + '/latest', true);
-            xhr.setRequestHeader('X-Access-Key', JSONBIN_API_KEY);
+            xhr.open('GET', API_URL, true);
             
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    try {
-                        var response = JSON.parse(xhr.responseText);
-                        globalScores = response.record || [];
-                        console.log('✅ Loaded', globalScores.length, 'global scores');
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        globalScores = JSON.parse(xhr.responseText);
+                        console.log('✅ Loaded', globalScores.length, 'scores from secure proxy');
                         document.getElementById('syncStatus').textContent = '🌍 Global';
-                    } catch(e) {
+                    } else {
                         loadLocalScores();
                         document.getElementById('syncStatus').textContent = '📱 Local';
                     }
-                } else if (xhr.readyState === 4) {
-                    loadLocalScores();
-                    document.getElementById('syncStatus').textContent = '📱 Local';
                 }
             };
             
             xhr.onerror = function() {
+                console.log('Fallback to local');
                 loadLocalScores();
                 document.getElementById('syncStatus').textContent = '📱 Local';
             };
@@ -698,10 +663,11 @@
             document.getElementById('scoresList').innerHTML = html || 'No scores yet';
         }
         
-        console.log('⛵ Shacker OpenSea Direct API Version');
+        console.log('🔒 Shacker Secure Proxy Version');
+        console.log('API: ' + API_URL);
         
         if (window.parent !== window) {
-            console.log('Running in iframe (OpenSea mode)');
+            console.log('Running in iframe (OpenSea compatible with secure proxy)');
         }
     </script>
 </body>
