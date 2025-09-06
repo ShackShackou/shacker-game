@@ -227,7 +227,7 @@
             <div id="finalScore">Score: 0</div>
             <div id="leaderboard" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
                 <h3>TOP SCORES</h3>
-                <div id="scoresList" style="height: 280px;"></div>
+                <div id="scoresList" style="height: 320px;"></div>
                 <div id="gameOverPagination" class="pagination"></div>
             </div>
             <button class="btn" id="restartBtn">PLAY AGAIN</button>
@@ -813,7 +813,7 @@
             }
             
             if (globalScores.length === 0) {
-                html = '<div style="height: 280px; display: flex; align-items: center; justify-content: center;">';
+                html = '<div style="height: 320px; display: flex; align-items: center; justify-content: center;">';
                 html += '<p style="text-align: center; color: #888;">No scores yet</p>';
                 html += '</div>';
             }
