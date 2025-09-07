@@ -304,10 +304,42 @@
         // API Configuration
         var API_URL = 'https://shacker-proxy.onrender.com'; // Production API server
         
-        // Auth variables
-        var authToken = localStorage.getItem('shackerToken');
-        var currentUsername = localStorage.getItem('shackerUsername');
+        // Auth variables - Use memory storage for sandboxed iframes
+        var authToken = null;
+        var currentUsername = null;
         var gamesLeft = 0;
+        
+        // Safe storage wrapper that works in sandboxed iframes
+        var storage = {
+            getItem: function(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    // Sandboxed iframe - use memory storage
+                    return window[key + '_memory'];
+                }
+            },
+            setItem: function(key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                } catch (e) {
+                    // Sandboxed iframe - use memory storage
+                    window[key + '_memory'] = value;
+                }
+            },
+            removeItem: function(key) {
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) {
+                    // Sandboxed iframe - clear memory storage
+                    window[key + '_memory'] = null;
+                }
+            }
+        };
+        
+        // Try to load saved credentials
+        authToken = storage.getItem('shackerToken');
+        currentUsername = storage.getItem('shackerUsername');
         
         // Game variables
         var canvas = null;
@@ -336,6 +368,15 @@
             console.log('🔒 Shacker with Auth System loading...');
             console.log('📡 API URL:', API_URL);
             console.log('🌐 Current location:', window.location.href);
+            
+            // Check if we're in a sandboxed iframe
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                console.log('✅ localStorage available');
+            } catch (e) {
+                console.log('⚠️ Running in sandboxed iframe - using memory storage');
+            }
             
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
@@ -394,8 +435,8 @@
                     currentUsername = data.username;
                     gamesLeft = data.gamesLeft;
                     
-                    localStorage.setItem('shackerToken', authToken);
-                    localStorage.setItem('shackerUsername', currentUsername);
+                    storage.setItem('shackerToken', authToken);
+                    storage.setItem('shackerUsername', currentUsername);
                     
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
@@ -445,8 +486,8 @@
                     currentUsername = data.username;
                     gamesLeft = data.gamesLeft;
                     
-                    localStorage.setItem('shackerToken', authToken);
-                    localStorage.setItem('shackerUsername', currentUsername);
+                    storage.setItem('shackerToken', authToken);
+                    storage.setItem('shackerUsername', currentUsername);
                     
                     document.getElementById('registerSuccess').textContent = 'Account created! Welcome!';
                     
@@ -502,8 +543,8 @@
         }
         
         function logout() {
-            localStorage.removeItem('shackerToken');
-            localStorage.removeItem('shackerUsername');
+            storage.removeItem('shackerToken');
+            storage.removeItem('shackerUsername');
             authToken = null;
             currentUsername = null;
             showLoginScreen();
