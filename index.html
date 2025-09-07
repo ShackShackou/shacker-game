@@ -331,7 +331,7 @@
         <div id="syncStatus">🔄 Checking...</div>
         
         <!-- LOGIN SCREEN -->
-        <div id="loginScreen" style="display: none;">
+        <div id="loginScreen">
             <h1>🎮 SHACKER LOGIN</h1>
             
             <div id="loginForm" class="auth-form">
@@ -495,15 +495,8 @@
             if (authToken && currentUsername) {
                 checkAuth();
             } else {
-                // Check if we should show login or original game
-                if (window.location.search.includes('auth=true')) {
-                    showLoginScreen();
-                } else {
-                    // Show original game without auth
-                    document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('nameInput').style.display = 'block';
-                    document.getElementById('welcomeMessage').style.display = 'none';
-                }
+                // ALWAYS show login screen - auth is required
+                showLoginScreen();
             }
             
             loadScores();
