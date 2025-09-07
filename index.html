@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shacker Game - Account System</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Shacker Game - Account System v2</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -304,6 +307,17 @@
         // API Configuration
         var API_URL = 'https://shacker-proxy.onrender.com'; // Production API server
         
+        // Detect sandbox environment FIRST
+        var isSandboxed = false;
+        try {
+            var test = window.localStorage;
+            test.setItem('test', '1');
+            test.removeItem('test');
+        } catch (e) {
+            isSandboxed = true;
+            console.log('⚠️ Sandboxed environment detected - using memory storage');
+        }
+        
         // Auth variables - Use memory storage for sandboxed iframes
         var authToken = null;
         var currentUsername = null;
@@ -312,26 +326,34 @@
         // Safe storage wrapper that works in sandboxed iframes
         var storage = {
             getItem: function(key) {
+                if (isSandboxed) {
+                    return window[key + '_memory'];
+                }
                 try {
                     return window.localStorage.getItem(key);
                 } catch (e) {
-                    // Sandboxed iframe - use memory storage
                     return window[key + '_memory'];
                 }
             },
             setItem: function(key, value) {
+                if (isSandboxed) {
+                    window[key + '_memory'] = value;
+                    return;
+                }
                 try {
                     window.localStorage.setItem(key, value);
                 } catch (e) {
-                    // Sandboxed iframe - use memory storage
                     window[key + '_memory'] = value;
                 }
             },
             removeItem: function(key) {
+                if (isSandboxed) {
+                    window[key + '_memory'] = null;
+                    return;
+                }
                 try {
                     window.localStorage.removeItem(key);
                 } catch (e) {
-                    // Sandboxed iframe - clear memory storage
                     window[key + '_memory'] = null;
                 }
             }
@@ -369,14 +391,11 @@
             console.log('📡 API URL:', API_URL);
             console.log('🌐 Current location:', window.location.href);
             
-            // Check if we're in a sandboxed iframe
-            try {
-                var testStorage = window.localStorage;
-                testStorage.setItem('test', 'test');
-                testStorage.removeItem('test');
-                console.log('✅ localStorage available');
-            } catch (e) {
-                console.log('⚠️ Running in sandboxed iframe - using memory storage');
+            // Already checked sandbox status at startup
+            if (isSandboxed) {
+                console.log('⚠️ Running in sandboxed iframe - auth will not persist');
+            } else {
+                console.log('✅ localStorage available - auth will persist');
             }
             
             canvas = document.getElementById('gameCanvas');
