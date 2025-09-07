@@ -23,35 +23,12 @@ const DAILY_GAME_LIMIT = 10;
 const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '68b08a1fd0ea881f40696e32';
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O';
 
-// Middleware
+// Middleware - TEMPORARY: Allow ALL origins for debugging
 app.use(cors({
-    origin: function(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        // Allow specific origins
-        const allowedOrigins = [
-            'https://shacker-game.vercel.app',
-            'https://opensea.io',
-            'https://testnets.opensea.io',
-            'http://localhost:8000',
-            'http://localhost:3000',
-            'http://127.0.0.1:8000',
-            'null' // For file:// protocol
-        ];
-        
-        // Check if origin is allowed or starts with localhost
-        if (allowedOrigins.includes(origin) || 
-            origin.startsWith('http://localhost:') || 
-            origin.startsWith('https://opensea.io') ||
-            origin === 'null') {
-            callback(null, true);
-        } else {
-            console.log('CORS blocked origin:', origin);
-            callback(null, true); // Actually allow all origins for now to debug
-        }
-    },
-    credentials: true
+    origin: true, // Allow ALL origins
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
