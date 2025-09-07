@@ -4,9 +4,9 @@
   "description": "Auth server for Shacker game with user accounts",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-with-auth.js",
     "start-auth": "node server-with-auth.js",
-    "dev": "node server.js"
+    "dev": "node server-with-auth.js"
   },
   "engines": {
     "node": ">=14.0.0"
