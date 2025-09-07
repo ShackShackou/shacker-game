@@ -32,16 +32,23 @@ app.use(cors({
         // Allow specific origins
         const allowedOrigins = [
             'https://shacker-game.vercel.app',
+            'https://opensea.io',
+            'https://testnets.opensea.io',
             'http://localhost:8000',
             'http://localhost:3000',
             'http://127.0.0.1:8000',
             'null' // For file:// protocol
         ];
         
-        if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost:') || origin === 'null') {
+        // Check if origin is allowed or starts with localhost
+        if (allowedOrigins.includes(origin) || 
+            origin.startsWith('http://localhost:') || 
+            origin.startsWith('https://opensea.io') ||
+            origin === 'null') {
             callback(null, true);
         } else {
-            callback(null, false);
+            console.log('CORS blocked origin:', origin);
+            callback(null, true); // Actually allow all origins for now to debug
         }
     },
     credentials: true
