@@ -1,10 +1,11 @@
 {
   "name": "shacker-proxy",
-  "version": "1.0.0",
-  "description": "Proxy CORS pour Shacker Game - Cache la clé API JSONBin",
+  "version": "2.0.0",
+  "description": "Auth server for Shacker game with user accounts",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start-auth": "node server-with-auth.js",
     "dev": "node server.js"
   },
   "engines": {
@@ -13,6 +14,9 @@
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.0",
+    "@supabase/supabase-js": "^2.39.0"
   }
 }
