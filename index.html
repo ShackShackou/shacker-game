@@ -371,6 +371,8 @@
         var score = 0;
         var level = 1;
         var globalScores = [];
+        var currentPage = 0;
+        var scoresPerPage = 5;
         
         // Player
         var player = {
@@ -761,6 +763,8 @@
             document.getElementById('finalLevel').textContent = level;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
+            // Reset to first page to show top scores
+            currentPage = 0;
             displayScores();
         }
         
@@ -811,18 +815,55 @@
         function displayScores() {
             if (!globalScores || globalScores.length === 0) {
                 document.getElementById('scoresList').innerHTML = '<div style="color: #999; text-align: center; margin-top: 50px;">No scores yet!</div>';
+                document.getElementById('gameOverPagination').innerHTML = '';
                 return;
             }
             
+            var startIdx = currentPage * scoresPerPage;
+            var endIdx = Math.min(startIdx + scoresPerPage, globalScores.length);
+            
             var html = '';
-            for (var i = 0; i < Math.min(10, globalScores.length); i++) {
+            for (var i = startIdx; i < endIdx; i++) {
                 var entry = globalScores[i];
-                html += '<div class="score-entry" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">';
-                html += '<span style="color: #00ffcc;">' + (i + 1) + '. ' + (entry.name || 'Anonymous') + '</span>';
+                var rank = i + 1;
+                var rankColor = rank === 1 ? '#ffd700' : rank === 2 ? '#c0c0c0' : rank === 3 ? '#cd7f32' : '#00ffcc';
+                
+                html += '<div class="score-entry" style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">';
+                html += '<span style="color: ' + rankColor + ';">' + rank + '. ' + (entry.name || 'Anonymous') + '</span>';
                 html += '<span style="color: #ffd700; font-weight: bold;">' + entry.score + '</span>';
                 html += '</div>';
             }
+            
             document.getElementById('scoresList').innerHTML = html;
+            updatePagination();
+        }
+        
+        function updatePagination() {
+            var totalPages = Math.ceil(globalScores.length / scoresPerPage);
+            var paginationHtml = '';
+            
+            if (totalPages > 1) {
+                paginationHtml += '<button onclick="prevPage()" style="background: #667eea; color: white; border: none; padding: 5px 10px; margin: 0 5px; cursor: pointer; border-radius: 5px;" ' + (currentPage === 0 ? 'disabled' : '') + '>←</button>';
+                paginationHtml += '<span style="color: #00ffcc;">' + (currentPage + 1) + ' / ' + totalPages + '</span>';
+                paginationHtml += '<button onclick="nextPage()" style="background: #667eea; color: white; border: none; padding: 5px 10px; margin: 0 5px; cursor: pointer; border-radius: 5px;" ' + (currentPage >= totalPages - 1 ? 'disabled' : '') + '>→</button>';
+            }
+            
+            document.getElementById('gameOverPagination').innerHTML = paginationHtml;
+        }
+        
+        function nextPage() {
+            var totalPages = Math.ceil(globalScores.length / scoresPerPage);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                displayScores();
+            }
+        }
+        
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                displayScores();
+            }
         }
         
         function restartGame() {
@@ -839,7 +880,8 @@
             document.getElementById('finalScore').textContent = score || 0;
             document.getElementById('finalLevel').textContent = level || 1;
             
-            // Load latest scores and display them
+            // Reset to first page and load latest scores
+            currentPage = 0;
             loadScores();
             setTimeout(displayScores, 500);
         }
