@@ -25,7 +25,25 @@ const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || '$2a$10$WLrKiYdlm2jsQ8vUC
 
 // Middleware
 app.use(cors({
-    origin: ['https://shacker-game.vercel.app', 'http://localhost:8000', 'http://localhost:3000'],
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Allow specific origins
+        const allowedOrigins = [
+            'https://shacker-game.vercel.app',
+            'http://localhost:8000',
+            'http://localhost:3000',
+            'http://127.0.0.1:8000',
+            'null' // For file:// protocol
+        ];
+        
+        if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost:') || origin === 'null') {
+            callback(null, true);
+        } else {
+            callback(null, false);
+        }
+    },
     credentials: true
 }));
 app.use(express.json());
