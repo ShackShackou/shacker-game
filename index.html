@@ -313,7 +313,7 @@
         var storage = {
             getItem: function(key) {
                 try {
-                    return localStorage.getItem(key);
+                    return window.localStorage.getItem(key);
                 } catch (e) {
                     // Sandboxed iframe - use memory storage
                     return window[key + '_memory'];
@@ -321,7 +321,7 @@
             },
             setItem: function(key, value) {
                 try {
-                    localStorage.setItem(key, value);
+                    window.localStorage.setItem(key, value);
                 } catch (e) {
                     // Sandboxed iframe - use memory storage
                     window[key + '_memory'] = value;
@@ -329,7 +329,7 @@
             },
             removeItem: function(key) {
                 try {
-                    localStorage.removeItem(key);
+                    window.localStorage.removeItem(key);
                 } catch (e) {
                     // Sandboxed iframe - clear memory storage
                     window[key + '_memory'] = null;
@@ -371,8 +371,9 @@
             
             // Check if we're in a sandboxed iframe
             try {
-                localStorage.setItem('test', 'test');
-                localStorage.removeItem('test');
+                var testStorage = window.localStorage;
+                testStorage.setItem('test', 'test');
+                testStorage.removeItem('test');
                 console.log('✅ localStorage available');
             } catch (e) {
                 console.log('⚠️ Running in sandboxed iframe - using memory storage');
