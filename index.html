@@ -624,6 +624,8 @@
                         document.getElementById('userInfo').style.display = 'block';
                         document.getElementById('usernameDisplay').textContent = currentUsername;
                         document.getElementById('welcomeUsername').textContent = currentUsername;
+                        document.getElementById('nameInput').style.display = 'none';
+                        document.getElementById('welcomeMessage').style.display = 'block';
                         updateGamesLeftDisplay();
                     }, 1500);
                 } else {
@@ -652,6 +654,8 @@
                     document.getElementById('userInfo').style.display = 'block';
                     document.getElementById('usernameDisplay').textContent = currentUsername;
                     document.getElementById('welcomeUsername').textContent = currentUsername;
+                    document.getElementById('nameInput').style.display = 'none';
+                    document.getElementById('welcomeMessage').style.display = 'block';
                     updateGamesLeftDisplay();
                     
                     if (!data.canPlay) {
@@ -690,8 +694,10 @@
             
             console.log('Starting game...');
             
-            // Get player name from input if not using auth
-            if (!authToken) {
+            // Use currentUsername when authenticated, otherwise get from input
+            if (authToken && currentUsername) {
+                playerName = currentUsername;
+            } else {
                 playerName = document.getElementById('nameInput').value || 'Player';
             }
             
