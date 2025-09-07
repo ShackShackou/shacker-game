@@ -334,6 +334,8 @@
         // Initialize
         window.onload = function() {
             console.log('🔒 Shacker with Auth System loading...');
+            console.log('📡 API URL:', API_URL);
+            console.log('🌐 Current location:', window.location.href);
             
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
@@ -408,8 +410,9 @@
                 }
             })
             .catch(error => {
-                document.getElementById('loginError').textContent = 'Connection error';
-                console.error('Login error:', error);
+                console.error('Login error details:', error);
+                console.error('API URL used:', API_URL + '/login');
+                document.getElementById('loginError').textContent = 'Connection error: ' + error.message;
             });
         }
         
@@ -460,8 +463,9 @@
                 }
             })
             .catch(error => {
-                document.getElementById('registerError').textContent = 'Connection error';
-                console.error('Register error:', error);
+                console.error('Register error details:', error);
+                console.error('API URL used:', API_URL + '/register');
+                document.getElementById('registerError').textContent = 'Connection error: ' + error.message;
             });
         }
         
