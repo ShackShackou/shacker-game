@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shacker Game - Secure Proxy Version</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        
+        body {
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            color: white;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #level {
+            font-size: 18px;
+            color: #00ffcc;
+            margin-top: 5px;
+        }
+        
+        #startScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,26,46,0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #startScreen h1 {
+            font-size: 60px;
+            color: #00ffcc;
+            margin-bottom: 30px;
+        }
+        
+        #nameInput {
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+            width: 300px;
+            max-width: 80%;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+        }
+        
+        #gameOverScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+        }
+        
+        #gameOverScreen h2 {
+            font-size: 48px;
+            color: #ff0088;
+            margin-bottom: 20px;
+        }
+        
+        #finalScore {
+            font-size: 32px;
+            color: #00ffcc;
+            margin-bottom: 20px;
+        }
+        
+        #leaderboard {
+            background: rgba(0,0,0,0.8) !important;
+            padding: 25px !important;
+            border-radius: 15px !important;
+            margin: 20px !important;
+            width: 400px !important;
+            height: 380px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            overflow: visible !important;
+        }
+        
+        #leaderboard h3 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        #syncStatus {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #00ff88;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 200;
+        }
+        
+        .score-entry {
+            padding: 10px 15px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            height: 45px;
+        }
+        
+        .score-entry span:first-child {
+            display: flex;
+            align-items: center;
+            min-width: 200px;
+        }
+        
+        .score-entry span:last-child {
+            font-weight: bold;
+            color: #00ffcc;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            min-height: 40px;
+        }
+        
+        .page-btn {
+            padding: 8px 16px;
+            background: rgba(102,126,234,0.3);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .page-btn:hover {
+            background: rgba(102,126,234,0.5);
+        }
+        
+        .page-btn.active {
+            background: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="level">Level: 1</div>
+        </div>
+        
+        <div id="syncStatus">🔄 Checking...</div>
+        
+        <!-- START SCREEN -->
+        <div id="startScreen">
+            <h1>SHACKER</h1>
+            <input type="text" id="nameInput" placeholder="Enter your name" maxlength="20">
+            <button class="btn" id="startBtn">START GAME</button>
+            <button class="btn" id="viewScoresBtn" style="background: linear-gradient(135deg, #ffd700, #ffa500);">🏆 VIEW SCORES</button>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div id="gameOverScreen">
+            <h2 style="font-size: 48px; color: #ff0088; margin-bottom: 10px;">GAME OVER</h2>
+            <div id="finalScore" style="font-size: 32px; color: #00ffcc; margin-bottom: 20px;">Score: 0</div>
+            <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h3>
+            <div style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 320px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div id="scoresList" style="height: 260px;"></div>
+                <div id="gameOverPagination" class="pagination" style="margin-top: 10px;"></div>
+            </div>
+            <button class="btn" id="restartBtn">PLAY AGAIN</button>
+        </div>
+        
+        <!-- SCORES VIEW SCREEN -->
+        <div id="scoresViewScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(26,26,46,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white;">
+            <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h2>
+            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div id="scoresList2" style="height: 320px;"></div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+            <button class="btn" onclick="document.getElementById('scoresViewScreen').style.display='none'; document.getElementById('startScreen').style.display='flex';">BACK TO MENU</button>
+        </div>
+    </div>
+    
+    <script>
+        // SECURE PROXY VERSION - API Key hidden on server
+        
+        // API endpoint - Using your secure proxy
+        var API_URL = 'https://shacker-proxy.onrender.com/scores';
+        
+        // Game variables
+        var canvas = null;
+        var ctx = null;
+        var gameRunning = false;
+        var playerName = '';
+        var score = 0;
+        var level = 1;
+        var globalScores = [];
+        
+        // Player
+        var player = {
+            x: 0,
+            y: 0,
+            size: 20,
+            color: '#00ffcc',
+            trail: []
+        };
+        
+        // Enemies
+        var enemies = [];
+        var collectibles = [];
+        var particles = [];
+        
+        // Initialize when page loads
+        window.onload = function() {
+            console.log('🔒 Shacker Secure Proxy loading...');
+            
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            loadScores();
+            
+            document.getElementById('startBtn').onclick = startGame;
+            document.getElementById('restartBtn').onclick = restartGame;
+            document.getElementById('viewScoresBtn').onclick = viewScores;
+            
+            setupControls();
+            
+            console.log('Game ready with secure proxy!');
+        };
+        
+        function startGame() {
+            console.log('Starting game...');
+            
+            playerName = document.getElementById('nameInput').value || 'Player';
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            score = 0;
+            level = 1;
+            enemies = [];
+            collectibles = [];
+            particles = [];
+            player.trail = [];
+            
+            if (canvas.width === 0 || canvas.height === 0) {
+                canvas.width = window.innerWidth || 800;
+                canvas.height = window.innerHeight || 600;
+            }
+            
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            player.size = 20;
+            
+            for (var i = 0; i < 5; i++) {
+                spawnEnemy();
+            }
+            
+            for (var j = 0; j < 3; j++) {
+                spawnCollectible();
+            }
+            
+            gameRunning = true;
+            gameLoop();
+            
+            if (!window.enemySpawnInterval) {
+                window.enemySpawnInterval = setInterval(function() {
+                    if (gameRunning && enemies.length < 10 + level) {
+                        spawnEnemy();
+                    }
+                }, 2000);
+            }
+        }
+        
+        function setupControls() {
+            canvas.onmousemove = function(e) {
+                if (gameRunning) {
+                    var rect = canvas.getBoundingClientRect();
+                    var scaleX = canvas.width / rect.width;
+                    var scaleY = canvas.height / rect.height;
+                    
+                    player.x = (e.clientX - rect.left) * scaleX;
+                    player.y = (e.clientY - rect.top) * scaleY;
+                }
+            };
+            
+            canvas.ontouchmove = function(e) {
+                if (gameRunning && e.touches[0]) {
+                    e.preventDefault();
+                    var rect = canvas.getBoundingClientRect();
+                    var scaleX = canvas.width / rect.width;
+                    var scaleY = canvas.height / rect.height;
+                    
+                    player.x = (e.touches[0].clientX - rect.left) * scaleX;
+                    player.y = (e.touches[0].clientY - rect.top) * scaleY;
+                }
+            };
+        }
+        
+        function spawnEnemy() {
+            var side = Math.floor(Math.random() * 4);
+            var enemy = {
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                size: 15 + Math.random() * 20,
+                color: 'hsl(' + Math.floor(Math.random() * 60) + ', 100%, 50%)'
+            };
+            
+            if (side === 0) {
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = enemy.size;
+                enemy.vx = (Math.random() - 0.5) * 2;
+                enemy.vy = Math.random() * 2 + 1;
+            } else if (side === 1) {
+                enemy.x = canvas.width - enemy.size;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = -(Math.random() * 2 + 1);
+                enemy.vy = (Math.random() - 0.5) * 2;
+            } else if (side === 2) {
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = canvas.height - enemy.size;
+                enemy.vx = (Math.random() - 0.5) * 2;
+                enemy.vy = -(Math.random() * 2 + 1);
+            } else {
+                enemy.x = enemy.size;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = Math.random() * 2 + 1;
+                enemy.vy = (Math.random() - 0.5) * 2;
+            }
+            
+            enemy.vx *= (1 + level * 0.2);
+            enemy.vy *= (1 + level * 0.2);
+            
+            enemies.push(enemy);
+        }
+        
+        function spawnCollectible() {
+            collectibles.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * (canvas.height - 40) + 20,
+                size: 10,
+                color: '#ffff00',
+                value: 100 * level
+            });
+        }
+        
+        function createParticles(x, y, color) {
+            for (var i = 0; i < 5; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    size: Math.random() * 3 + 1,
+                    color: color,
+                    life: 1
+                });
+            }
+        }
+        
+        function update() {
+            player.trail.push({x: player.x, y: player.y});
+            if (player.trail.length > 20) {
+                player.trail.shift();
+            }
+            
+            for (var i = enemies.length - 1; i >= 0; i--) {
+                var enemy = enemies[i];
+                
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+                
+                if (enemy.x <= enemy.size || enemy.x >= canvas.width - enemy.size) {
+                    enemy.vx = -enemy.vx;
+                    enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
+                }
+                if (enemy.y <= enemy.size || enemy.y >= canvas.height - enemy.size) {
+                    enemy.vy = -enemy.vy;
+                    enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
+                }
+                
+                enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
+                enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
+                
+                if (gameRunning && player.x && player.y) {
+                    var dx = enemy.x - player.x;
+                    var dy = enemy.y - player.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < enemy.size + player.size) {
+                        endGame();
+                        return;
+                    }
+                }
+            }
+            
+            for (var j = collectibles.length - 1; j >= 0; j--) {
+                var collectible = collectibles[j];
+                
+                var dx2 = collectible.x - player.x;
+                var dy2 = collectible.y - player.y;
+                var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                
+                if (dist2 < collectible.size + player.size) {
+                    score += collectible.value;
+                    createParticles(collectible.x, collectible.y, collectible.color);
+                    collectibles.splice(j, 1);
+                    
+                    setTimeout(spawnCollectible, 2000);
+                    
+                    document.getElementById('score').textContent = 'Score: ' + score;
+                }
+            }
+            
+            for (var k = particles.length - 1; k >= 0; k--) {
+                var particle = particles[k];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+                particle.life -= 0.02;
+                
+                if (particle.life <= 0) {
+                    particles.splice(k, 1);
+                }
+            }
+            
+            if (score > level * 1000) {
+                level++;
+                document.getElementById('level').textContent = 'Level: ' + level;
+                spawnEnemy();
+            }
+        }
+        
+        function draw() {
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
+            ctx.lineWidth = 1;
+            
+            var gridSize = 50;
+            for (var i = 0; i < canvas.width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (var j = 0; j < canvas.height; j += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, j);
+                ctx.lineTo(canvas.width, j);
+                ctx.stroke();
+            }
+            
+            for (var t = 0; t < player.trail.length; t++) {
+                var alpha = t / player.trail.length * 0.5;
+                ctx.fillStyle = 'rgba(0, 255, 204, ' + alpha + ')';
+                var point = player.trail[t];
+                ctx.fillRect(point.x - player.size/2, point.y - player.size/2, player.size, player.size);
+            }
+            
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(Date.now() * 0.001);
+            ctx.fillStyle = player.color;
+            ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+            ctx.restore();
+            
+            for (var e = 0; e < enemies.length; e++) {
+                var enemy = enemies[e];
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            for (var c = 0; c < collectibles.length; c++) {
+                var collectible = collectibles[c];
+                ctx.save();
+                ctx.translate(collectible.x, collectible.y);
+                ctx.rotate(Date.now() * 0.005);
+                ctx.fillStyle = collectible.color;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = collectible.color;
+                ctx.fillRect(-collectible.size/2, -collectible.size/2, collectible.size, collectible.size);
+                ctx.restore();
+            }
+            
+            for (var p = 0; p < particles.length; p++) {
+                var particle = particles[p];
+                ctx.fillStyle = 'rgba(255, 255, 0, ' + particle.life + ')';
+                ctx.fillRect(particle.x - particle.size/2, particle.y - particle.size/2, particle.size, particle.size);
+            }
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            update();
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function endGame() {
+            console.log('GAME OVER - Score:', score);
+            gameRunning = false;
+            
+            // Add the new score to local array immediately
+            var newScore = {
+                name: playerName,
+                score: score,
+                level: level
+            };
+            
+            // Save score to server
+            saveScore();
+            
+            document.getElementById('finalScore').textContent = 'Score: ' + score;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            
+            // Add new score to global array for immediate display
+            globalScores.push(newScore);
+            globalScores.sort(function(a, b) {
+                return b.score - a.score;
+            });
+            globalScores = globalScores.slice(0, 100);
+            
+            // Display immediately with local data
+            gameOverPage = 1;
+            displayScores();
+            
+            // Then refresh from server to sync
+            setTimeout(function() {
+                loadScores();
+            }, 1000);
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+        
+        var currentPage = 1;
+        var scoresPerPage = 5;
+        
+        function viewScores() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('scoresViewScreen').style.display = 'flex';
+            
+            // Refresh scores before showing
+            loadScores();
+            
+            // Reset to first page
+            currentPage = 1;
+            displayScorePage();
+        }
+        
+        function displayScorePage() {
+            var startIdx = (currentPage - 1) * scoresPerPage;
+            var endIdx = startIdx + scoresPerPage;
+            var pageScores = globalScores.slice(startIdx, endIdx);
+            
+            var html = '';
+            
+            // Always show 5 slots
+            for (var i = 0; i < scoresPerPage; i++) {
+                var position = startIdx + i;
+                
+                if (i < pageScores.length) {
+                    var entry = pageScores[i];
+                    var medal = '';
+                    var medalStyle = '';
+                    
+                    if (position === 0) {
+                        medal = '🥇';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 1) {
+                        medal = '🥈';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 2) {
+                        medal = '🥉';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else {
+                        medal = (position + 1) + '.';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    }
+                    
+                    html += '<div class="score-entry">';
+                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + entry.name + '</span>';
+                    html += '<span>' + entry.score + '</span>';
+                    html += '</div>';
+                } else {
+                    // Empty slot
+                    html += '<div class="score-entry" style="visibility: hidden;">';
+                    html += '<span>-</span>';
+                    html += '<span>-</span>';
+                    html += '</div>';
+                }
+            }
+            
+            if (globalScores.length === 0) {
+                html = '<div style="height: 320px; display: flex; align-items: center; justify-content: center;">';
+                html += '<p style="text-align: center; color: #888;">No scores yet. Be the first!</p>';
+                html += '</div>';
+            }
+            
+            document.getElementById('scoresList2').innerHTML = html;
+            
+            // Create pagination buttons
+            var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
+            var paginationHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;">';
+            
+            if (currentPage > 1) {
+                paginationHtml += '<button class="page-btn" onclick="currentPage--; displayScorePage();">◀</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
+            }
+            
+            paginationHtml += '<span style="color: #888; margin: 0 15px; min-width: 100px; text-align: center;">Page ' + currentPage + '/' + totalPages + '</span>';
+            
+            if (currentPage < totalPages) {
+                paginationHtml += '<button class="page-btn" onclick="currentPage++; displayScorePage();">▶</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
+            }
+            
+            paginationHtml += '</div>';
+            document.getElementById('pagination').innerHTML = paginationHtml;
+        }
+        
+        // SECURE PROXY API Functions
+        function saveScore() {
+            var newScore = {
+                name: playerName,
+                score: score,
+                level: level
+            };
+            
+            document.getElementById('syncStatus').textContent = '⏳ Saving...';
+            
+            // Use XMLHttpRequest for better compatibility
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', API_URL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        console.log('✅ Score saved securely!', response);
+                        document.getElementById('syncStatus').textContent = '🌍 Global';
+                        loadScores();
+                    } else {
+                        console.log('Using fallback');
+                        saveLocalScore(newScore);
+                        document.getElementById('syncStatus').textContent = '📱 Local';
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.log('Network error, using fallback');
+                saveLocalScore(newScore);
+                document.getElementById('syncStatus').textContent = '📱 Local';
+            };
+            
+            xhr.send(JSON.stringify(newScore));
+        }
+        
+        function loadScores() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', API_URL, true);
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            var newScores = JSON.parse(xhr.responseText);
+                            // Only update if we got valid data
+                            if (Array.isArray(newScores) && newScores.length > 0) {
+                                globalScores = newScores;
+                                console.log('✅ Loaded', globalScores.length, 'scores from secure proxy');
+                                document.getElementById('syncStatus').textContent = '🌍 Global';
+                                // Update display if on scores screen
+                                if (document.getElementById('gameOverScreen').style.display === 'flex') {
+                                    displayScores();
+                                }
+                                if (document.getElementById('scoresViewScreen').style.display === 'flex') {
+                                    displayScorePage();
+                                }
+                            } else {
+                                console.log('Empty response, keeping existing scores');
+                            }
+                        } catch(e) {
+                            console.log('Parse error, keeping existing scores');
+                        }
+                    } else {
+                        loadLocalScores();
+                        document.getElementById('syncStatus').textContent = '📱 Local';
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.log('Fallback to local');
+                loadLocalScores();
+                document.getElementById('syncStatus').textContent = '📱 Local';
+            };
+            
+            xhr.send();
+        }
+        
+        function saveLocalScore(newScore) {
+            try {
+                var stored = localStorage.getItem('shackerScores');
+                var scores = stored ? JSON.parse(stored) : [];
+                scores.push(newScore);
+                scores.sort(function(a, b) {
+                    return b.score - a.score;
+                });
+                scores = scores.slice(0, 50);
+                localStorage.setItem('shackerScores', JSON.stringify(scores));
+                globalScores = scores;
+            } catch(e) {
+                console.log('Could not save locally');
+            }
+        }
+        
+        function loadLocalScores() {
+            try {
+                var stored = localStorage.getItem('shackerScores');
+                if (stored) {
+                    globalScores = JSON.parse(stored);
+                } else {
+                    globalScores = [];
+                }
+            } catch(e) {
+                globalScores = [];
+            }
+        }
+        
+        var gameOverPage = 1;
+        
+        function displayScores() {
+            var startIdx = (gameOverPage - 1) * scoresPerPage;
+            var endIdx = startIdx + scoresPerPage;
+            var pageScores = globalScores.slice(startIdx, endIdx);
+            
+            var html = '';
+            
+            // Always show 5 slots
+            for (var i = 0; i < scoresPerPage; i++) {
+                var position = startIdx + i;
+                
+                if (i < pageScores.length) {
+                    var entry = pageScores[i];
+                    var medal = '';
+                    var medalStyle = '';
+                    
+                    if (position === 0) {
+                        medal = '🥇';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 1) {
+                        medal = '🥈';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else if (position === 2) {
+                        medal = '🥉';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    } else {
+                        medal = (position + 1) + '.';
+                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
+                    }
+                    
+                    html += '<div class="score-entry">';
+                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + entry.name + '</span>';
+                    html += '<span>' + entry.score + '</span>';
+                    html += '</div>';
+                } else {
+                    // Empty slot
+                    html += '<div class="score-entry" style="visibility: hidden;">';
+                    html += '<span>-</span>';
+                    html += '<span>-</span>';
+                    html += '</div>';
+                }
+            }
+            
+            if (globalScores.length === 0) {
+                html = '<div style="height: 260px; display: flex; align-items: center; justify-content: center;">';
+                html += '<p style="text-align: center; color: #888;">No scores yet</p>';
+                html += '</div>';
+            }
+            
+            document.getElementById('scoresList').innerHTML = html;
+            
+            // Create pagination for game over screen
+            var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
+            var paginationHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;">';
+            
+            if (gameOverPage > 1) {
+                paginationHtml += '<button class="page-btn" onclick="gameOverPage--; displayScores();">◀</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
+            }
+            
+            paginationHtml += '<span style="color: #888; margin: 0 15px; min-width: 100px; text-align: center;">Page ' + gameOverPage + '/' + totalPages + '</span>';
+            
+            if (gameOverPage < totalPages) {
+                paginationHtml += '<button class="page-btn" onclick="gameOverPage++; displayScores();">▶</button>';
+            } else {
+                paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
+            }
+            
+            paginationHtml += '</div>';
+            document.getElementById('gameOverPagination').innerHTML = paginationHtml;
+        }
+        
+        console.log('🔒 Shacker Secure Proxy Version');
+        console.log('API: ' + API_URL);
+        
+        if (window.parent !== window) {
+            console.log('Running in iframe (OpenSea compatible with secure proxy)');
+        }
+    </script>
+</body>
+</html>

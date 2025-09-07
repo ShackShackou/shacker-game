@@ -27,12 +27,16 @@ const DAILY_GAME_LIMIT = 10;
 const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '68b08a1fd0ea881f40696e32';
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY; // Must be set in environment
 
-// Middleware - TEMPORARY: Allow ALL origins for debugging
+// Middleware - Allow Vercel and other origins
 app.use(cors({
-    origin: true, // Allow ALL origins
+    origin: function(origin, callback) {
+        // Allow all origins for now to fix the issue
+        callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200
 }));
 app.use(express.json());
 
