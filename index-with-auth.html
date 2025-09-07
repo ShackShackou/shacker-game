@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shacker Game - Account System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        
+        body {
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            color: white;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #level {
+            font-size: 18px;
+            color: #00ffcc;
+            margin-top: 5px;
+        }
+        
+        #gamesLeft {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 16px;
+            color: #ffd700;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        
+        #userInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 14px;
+            color: #00ffcc;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        
+        #userInfo button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #ff0088;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Login Screen Styles */
+        #loginScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,26,46,0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+        }
+        
+        #loginScreen h1 {
+            font-size: 60px;
+            color: #00ffcc;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        
+        .auth-form {
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .auth-input {
+            width: 300px;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #00ffcc;
+            color: white;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background: #ff00aa;
+            color: white;
+        }
+        
+        .error-message {
+            color: #ff4444;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .success-message {
+            color: #00ff88;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        #startScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,26,46,0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #startScreen h1 {
+            font-size: 60px;
+            color: #00ffcc;
+            margin-bottom: 30px;
+        }
+        
+        #syncStatus {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #00ff88;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 200;
+        }
+        
+        .score-entry {
+            padding: 10px 15px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            height: 45px;
+        }
+        
+        #gameOverScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="level">Level: 1</div>
+            <div id="gamesLeft">🎮 Games left: Loading...</div>
+        </div>
+        
+        <div id="userInfo">
+            👤 <span id="usernameDisplay">Not logged in</span>
+            <button onclick="logout()">Logout</button>
+        </div>
+        
+        <div id="syncStatus">🔄 Checking...</div>
+        
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen">
+            <h1>🎮 SHACKER LOGIN</h1>
+            
+            <div id="loginForm" class="auth-form">
+                <input type="text" id="loginUsername" class="auth-input" placeholder="Username" maxlength="20">
+                <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
+                
+                <div class="auth-buttons">
+                    <button class="btn" onclick="login()">LOGIN</button>
+                    <button class="btn btn-secondary" onclick="showRegister()">REGISTER</button>
+                </div>
+                
+                <div id="loginError" class="error-message"></div>
+            </div>
+            
+            <div id="registerForm" class="auth-form" style="display: none;">
+                <input type="text" id="regUsername" class="auth-input" placeholder="Username" maxlength="20">
+                <input type="email" id="regEmail" class="auth-input" placeholder="Email">
+                <input type="password" id="regPassword" class="auth-input" placeholder="Password (min 6 chars)">
+                
+                <div class="auth-buttons">
+                    <button class="btn btn-secondary" onclick="register()">CREATE ACCOUNT</button>
+                    <button class="btn" onclick="showLogin()">BACK</button>
+                </div>
+                
+                <div id="registerError" class="error-message"></div>
+                <div id="registerSuccess" class="success-message"></div>
+            </div>
+        </div>
+        
+        <!-- START SCREEN -->
+        <div id="startScreen">
+            <h1>SHACKER</h1>
+            <div style="color: #ffd700; font-size: 24px; margin-bottom: 20px;">
+                Welcome, <span id="welcomeUsername"></span>!
+            </div>
+            <button class="btn" id="startBtn" onclick="startGame()">START GAME</button>
+            <button class="btn" onclick="viewScores()" style="background: linear-gradient(135deg, #ffd700, #ffa500);">🏆 VIEW SCORES</button>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div id="gameOverScreen">
+            <h2 style="font-size: 48px; color: #ff0088; margin-bottom: 10px;">GAME OVER</h2>
+            <div id="finalScore" style="font-size: 32px; color: #00ffcc; margin-bottom: 20px;">Score: 0</div>
+            <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h3>
+            <div style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 320px;">
+                <div id="scoresList" style="height: 260px;"></div>
+                <div id="gameOverPagination" class="pagination" style="margin-top: 10px;"></div>
+            </div>
+            <button class="btn" id="restartBtn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+    
+    <script>
+        // API Configuration
+        var API_URL = 'http://localhost:10000'; // Change to https://shacker-proxy.onrender.com for production
+        
+        // Auth variables
+        var authToken = localStorage.getItem('shackerToken');
+        var currentUsername = localStorage.getItem('shackerUsername');
+        var gamesLeft = 0;
+        
+        // Game variables
+        var canvas = null;
+        var ctx = null;
+        var gameRunning = false;
+        var score = 0;
+        var level = 1;
+        var globalScores = [];
+        
+        // Player
+        var player = {
+            x: 0,
+            y: 0,
+            size: 20,
+            color: '#00ffcc',
+            trail: []
+        };
+        
+        // Enemies
+        var enemies = [];
+        var collectibles = [];
+        var particles = [];
+        
+        // Initialize
+        window.onload = function() {
+            console.log('🔒 Shacker with Auth System loading...');
+            
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            if (authToken && currentUsername) {
+                checkAuth();
+            } else {
+                showLoginScreen();
+            }
+            
+            setupControls();
+        };
+        
+        // AUTH FUNCTIONS
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+        
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('registerError').textContent = '';
+        }
+        
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginError').textContent = '';
+        }
+        
+        function login() {
+            var username = document.getElementById('loginUsername').value;
+            var password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                document.getElementById('loginError').textContent = 'Please fill all fields';
+                return;
+            }
+            
+            fetch(API_URL + '/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    authToken = data.token;
+                    currentUsername = data.username;
+                    gamesLeft = data.gamesLeft;
+                    
+                    localStorage.setItem('shackerToken', authToken);
+                    localStorage.setItem('shackerUsername', currentUsername);
+                    
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'flex';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('usernameDisplay').textContent = currentUsername;
+                    document.getElementById('welcomeUsername').textContent = currentUsername;
+                    updateGamesLeftDisplay();
+                    
+                    loadScores();
+                } else {
+                    document.getElementById('loginError').textContent = data.error || 'Login failed';
+                }
+            })
+            .catch(error => {
+                document.getElementById('loginError').textContent = 'Connection error';
+                console.error('Login error:', error);
+            });
+        }
+        
+        function register() {
+            var username = document.getElementById('regUsername').value;
+            var email = document.getElementById('regEmail').value;
+            var password = document.getElementById('regPassword').value;
+            
+            if (!username || !email || !password) {
+                document.getElementById('registerError').textContent = 'Please fill all fields';
+                return;
+            }
+            
+            if (password.length < 6) {
+                document.getElementById('registerError').textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            fetch(API_URL + '/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    authToken = data.token;
+                    currentUsername = data.username;
+                    gamesLeft = data.gamesLeft;
+                    
+                    localStorage.setItem('shackerToken', authToken);
+                    localStorage.setItem('shackerUsername', currentUsername);
+                    
+                    document.getElementById('registerSuccess').textContent = 'Account created! Welcome!';
+                    
+                    setTimeout(() => {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('startScreen').style.display = 'flex';
+                        document.getElementById('userInfo').style.display = 'block';
+                        document.getElementById('usernameDisplay').textContent = currentUsername;
+                        document.getElementById('welcomeUsername').textContent = currentUsername;
+                        updateGamesLeftDisplay();
+                    }, 1500);
+                } else {
+                    document.getElementById('registerError').textContent = data.error || 'Registration failed';
+                }
+            })
+            .catch(error => {
+                document.getElementById('registerError').textContent = 'Connection error';
+                console.error('Register error:', error);
+            });
+        }
+        
+        function checkAuth() {
+            fetch(API_URL + '/can-play', {
+                headers: {
+                    'Authorization': 'Bearer ' + authToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.canPlay !== undefined) {
+                    gamesLeft = data.gamesLeft;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'flex';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('usernameDisplay').textContent = currentUsername;
+                    document.getElementById('welcomeUsername').textContent = currentUsername;
+                    updateGamesLeftDisplay();
+                    
+                    if (!data.canPlay) {
+                        document.getElementById('startBtn').disabled = true;
+                        document.getElementById('startBtn').textContent = 'NO GAMES LEFT TODAY';
+                    }
+                    
+                    loadScores();
+                } else {
+                    showLoginScreen();
+                }
+            })
+            .catch(() => {
+                showLoginScreen();
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem('shackerToken');
+            localStorage.removeItem('shackerUsername');
+            authToken = null;
+            currentUsername = null;
+            showLoginScreen();
+        }
+        
+        function updateGamesLeftDisplay() {
+            document.getElementById('gamesLeft').textContent = '🎮 Games left: ' + gamesLeft + '/10';
+        }
+        
+        // GAME FUNCTIONS
+        function startGame() {
+            if (gamesLeft <= 0) {
+                alert('No games left today! Come back tomorrow!');
+                return;
+            }
+            
+            console.log('Starting game...');
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            score = 0;
+            level = 1;
+            enemies = [];
+            collectibles = [];
+            particles = [];
+            player.trail = [];
+            
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            
+            for (var i = 0; i < 5; i++) {
+                spawnEnemy();
+            }
+            
+            for (var j = 0; j < 3; j++) {
+                spawnCollectible();
+            }
+            
+            gameRunning = true;
+            gameLoop();
+        }
+        
+        function setupControls() {
+            canvas.onmousemove = function(e) {
+                if (gameRunning) {
+                    var rect = canvas.getBoundingClientRect();
+                    player.x = e.clientX - rect.left;
+                    player.y = e.clientY - rect.top;
+                }
+            };
+        }
+        
+        function spawnEnemy() {
+            var side = Math.floor(Math.random() * 4);
+            var enemy = {
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                size: 15 + Math.random() * 20,
+                color: 'hsl(' + Math.floor(Math.random() * 60) + ', 100%, 50%)'
+            };
+            
+            if (side === 0) {
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = 0;
+                enemy.vx = (Math.random() - 0.5) * 2;
+                enemy.vy = Math.random() * 2 + 1;
+            } else if (side === 1) {
+                enemy.x = canvas.width;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = -(Math.random() * 2 + 1);
+                enemy.vy = (Math.random() - 0.5) * 2;
+            } else if (side === 2) {
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = canvas.height;
+                enemy.vx = (Math.random() - 0.5) * 2;
+                enemy.vy = -(Math.random() * 2 + 1);
+            } else {
+                enemy.x = 0;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = Math.random() * 2 + 1;
+                enemy.vy = (Math.random() - 0.5) * 2;
+            }
+            
+            enemy.vx *= (1 + level * 0.2);
+            enemy.vy *= (1 + level * 0.2);
+            
+            enemies.push(enemy);
+        }
+        
+        function spawnCollectible() {
+            collectibles.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * (canvas.height - 40) + 20,
+                size: 10,
+                color: '#ffff00',
+                value: 100 * level
+            });
+        }
+        
+        function update() {
+            player.trail.push({x: player.x, y: player.y});
+            if (player.trail.length > 20) {
+                player.trail.shift();
+            }
+            
+            for (var i = enemies.length - 1; i >= 0; i--) {
+                var enemy = enemies[i];
+                
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+                
+                if (enemy.x <= 0 || enemy.x >= canvas.width) enemy.vx = -enemy.vx;
+                if (enemy.y <= 0 || enemy.y >= canvas.height) enemy.vy = -enemy.vy;
+                
+                var dx = enemy.x - player.x;
+                var dy = enemy.y - player.y;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < enemy.size + player.size) {
+                    endGame();
+                    return;
+                }
+            }
+            
+            for (var j = collectibles.length - 1; j >= 0; j--) {
+                var collectible = collectibles[j];
+                
+                var dx2 = collectible.x - player.x;
+                var dy2 = collectible.y - player.y;
+                var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                
+                if (dist2 < collectible.size + player.size) {
+                    score += collectible.value;
+                    collectibles.splice(j, 1);
+                    setTimeout(spawnCollectible, 2000);
+                    document.getElementById('score').textContent = 'Score: ' + score;
+                }
+            }
+            
+            if (score > level * 1000) {
+                level++;
+                document.getElementById('level').textContent = 'Level: ' + level;
+                spawnEnemy();
+            }
+        }
+        
+        function draw() {
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+            
+            // Draw enemies
+            for (var i = 0; i < enemies.length; i++) {
+                var enemy = enemies[i];
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw collectibles
+            for (var j = 0; j < collectibles.length; j++) {
+                var collectible = collectibles[j];
+                ctx.fillStyle = collectible.color;
+                ctx.fillRect(collectible.x - collectible.size/2, collectible.y - collectible.size/2, collectible.size, collectible.size);
+            }
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            update();
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            
+            saveScore();
+            
+            document.getElementById('finalScore').textContent = 'Score: ' + score;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            
+            displayScores();
+        }
+        
+        function saveScore() {
+            fetch(API_URL + '/scores', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + authToken
+                },
+                body: JSON.stringify({
+                    score: score,
+                    level: level
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    gamesLeft = data.gamesLeft;
+                    updateGamesLeftDisplay();
+                    
+                    if (gamesLeft <= 0) {
+                        document.getElementById('restartBtn').textContent = 'NO GAMES LEFT';
+                        document.getElementById('restartBtn').disabled = true;
+                    }
+                    
+                    loadScores();
+                }
+            })
+            .catch(error => {
+                console.error('Save score error:', error);
+            });
+        }
+        
+        function loadScores() {
+            fetch(API_URL + '/scores')
+                .then(response => response.json())
+                .then(scores => {
+                    globalScores = scores;
+                    document.getElementById('syncStatus').textContent = '🌍 Global';
+                })
+                .catch(error => {
+                    console.error('Load scores error:', error);
+                    document.getElementById('syncStatus').textContent = '📱 Local';
+                });
+        }
+        
+        function displayScores() {
+            var html = '';
+            for (var i = 0; i < Math.min(5, globalScores.length); i++) {
+                var entry = globalScores[i];
+                html += '<div class="score-entry">';
+                html += '<span>' + (i + 1) + '. ' + entry.name + '</span>';
+                html += '<span>' + entry.score + '</span>';
+                html += '</div>';
+            }
+            document.getElementById('scoresList').innerHTML = html;
+        }
+        
+        function restartGame() {
+            if (gamesLeft > 0) {
+                document.getElementById('gameOverScreen').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'flex';
+            }
+        }
+        
+        function viewScores() {
+            // Implement scores view
+            alert('Scores view coming soon!');
+        }
+    </script>
+</body>
+</html>
