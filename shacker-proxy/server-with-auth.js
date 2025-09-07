@@ -9,8 +9,12 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Supabase configuration
-const supabaseUrl = 'https://gbdlozmurnqrthxjihzk.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZGxvem11cm5xcnRoeGppaHprIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDcyMjA4NCwiZXhwIjoyMDUwMjk4MDg0fQ.Uby2tXwCnJ1zC0nDq4MbXnKvD82HfgtSw4K7kH3uiAM';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://gbdlozmurnqrthxjihzk.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY; // REQUIRED - Must be set in environment
+if (!supabaseKey) {
+    console.error('CRITICAL: SUPABASE_SERVICE_KEY not set in environment!');
+    process.exit(1);
+}
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // JWT Secret
@@ -21,7 +25,7 @@ const DAILY_GAME_LIMIT = 10;
 
 // JSONBin configuration (for backward compatibility)
 const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '68b08a1fd0ea881f40696e32';
-const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O';
+const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY; // Must be set in environment
 
 // Middleware - TEMPORARY: Allow ALL origins for debugging
 app.use(cors({
