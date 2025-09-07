@@ -293,7 +293,8 @@
         <!-- GAME OVER SCREEN -->
         <div id="gameOverScreen">
             <h2 style="font-size: 48px; color: #ff0088; margin-bottom: 10px;">GAME OVER</h2>
-            <div id="finalScore" style="font-size: 32px; color: #00ffcc; margin-bottom: 20px;">Score: 0</div>
+            <div style="font-size: 32px; color: #00ffcc; margin-bottom: 10px;">Score: <span id="finalScore">0</span></div>
+            <div style="font-size: 20px; color: #667eea; margin-bottom: 20px;">Level: <span id="finalLevel">1</span></div>
             <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h3>
             <div style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 320px;">
                 <div id="scoresList" style="height: 260px;"></div>
@@ -756,7 +757,8 @@
             
             saveScore();
             
-            document.getElementById('finalScore').textContent = 'Score: ' + score;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
             displayScores();
@@ -807,12 +809,17 @@
         }
         
         function displayScores() {
+            if (!globalScores || globalScores.length === 0) {
+                document.getElementById('scoresList').innerHTML = '<div style="color: #999; text-align: center; margin-top: 50px;">No scores yet!</div>';
+                return;
+            }
+            
             var html = '';
-            for (var i = 0; i < Math.min(5, globalScores.length); i++) {
+            for (var i = 0; i < Math.min(10, globalScores.length); i++) {
                 var entry = globalScores[i];
-                html += '<div class="score-entry">';
-                html += '<span>' + (i + 1) + '. ' + entry.name + '</span>';
-                html += '<span>' + entry.score + '</span>';
+                html += '<div class="score-entry" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">';
+                html += '<span style="color: #00ffcc;">' + (i + 1) + '. ' + (entry.name || 'Anonymous') + '</span>';
+                html += '<span style="color: #ffd700; font-weight: bold;">' + entry.score + '</span>';
                 html += '</div>';
             }
             document.getElementById('scoresList').innerHTML = html;
@@ -826,8 +833,15 @@
         }
         
         function viewScores() {
-            // Implement scores view
-            alert('Scores view coming soon!');
+            // Show game over screen with scores
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            document.getElementById('finalScore').textContent = score || 0;
+            document.getElementById('finalLevel').textContent = level || 1;
+            
+            // Load latest scores and display them
+            loadScores();
+            setTimeout(displayScores, 500);
         }
     </script>
 </body>
