@@ -1,0 +1,22 @@
+{
+  "name": "shacker-proxy",
+  "version": "2.0.0",
+  "description": "Auth server for Shacker game with user accounts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server-with-auth.js",
+    "start-auth": "node server-with-auth.js",
+    "dev": "node server-with-auth.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.0",
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
