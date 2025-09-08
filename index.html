@@ -70,17 +70,19 @@
         }
         
         #userInfo {
-            position: absolute;
+            position: fixed !important;  /* Fixed to stay visible */
             bottom: 20px;
             left: 20px;
             font-size: 14px;
             color: #00ffcc;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.95);
             padding: 15px 20px;
             border-radius: 10px;
-            z-index: 100;
+            z-index: 10000 !important;  /* Very high z-index */
             pointer-events: auto;
             min-width: 250px;
+            border: 2px solid #f6851b;  /* Orange border */
+            box-shadow: 0 0 20px rgba(246, 133, 27, 0.5);  /* Glow */
         }
         
         #userInfo button {
@@ -646,6 +648,11 @@
             
             if (authToken && currentUsername) {
                 checkAuth();
+                // Also check wallet status after a short delay to ensure UI is ready
+                setTimeout(() => {
+                    console.log('Double-checking wallet status on page load...');
+                    checkWalletStatus();
+                }, 1000);
             } else {
                 // ALWAYS show login screen - auth is required
                 showLoginScreen();
@@ -1559,7 +1566,20 @@
         
         // Check wallet status from profile
         function checkWalletStatus() {
-            if (!authToken) return;
+            console.log('=== checkWalletStatus called ===');
+            console.log('authToken exists:', !!authToken);
+            
+            if (!authToken) {
+                console.log('No auth token, skipping wallet check');
+                return;
+            }
+            
+            // ENSURE userInfo panel is visible
+            const userInfoPanel = document.getElementById('userInfo');
+            if (userInfoPanel) {
+                console.log('Making userInfo panel visible');
+                userInfoPanel.style.display = 'block';
+            }
             
             fetch(API_URL + '/profile', {
                 method: 'GET',
@@ -1569,7 +1589,10 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Profile data received:', data);
+                
                 if (data.wallet_address) {
+                    console.log('Wallet already linked:', data.wallet_address);
                     // Wallet already linked
                     document.getElementById('walletNotLinkedInfo').style.display = 'none';
                     document.getElementById('walletLinkedInfo').style.display = 'block';
@@ -1583,6 +1606,7 @@
                             data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
                     }
                 } else {
+                    console.log('No wallet linked - showing link button');
                     // No wallet linked - show link button
                     document.getElementById('walletNotLinkedInfo').style.display = 'block';
                     document.getElementById('walletLinkedInfo').style.display = 'none';
