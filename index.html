@@ -631,9 +631,16 @@
             
             loadScores();
             
-            document.getElementById('startBtn').onclick = startGame;
-            document.getElementById('restartBtn').onclick = restartGame;
-            document.getElementById('viewScoresBtn').onclick = viewScores;
+            // Make sure buttons are properly connected
+            const startBtn = document.getElementById('startBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            const viewScoresBtn = document.getElementById('viewScoresBtn');
+            
+            if (startBtn) startBtn.onclick = startGame;
+            if (restartBtn) restartBtn.onclick = restartGame;
+            if (viewScoresBtn) viewScoresBtn.onclick = viewScores;
+            
+            console.log('Buttons connected:', !!startBtn, !!restartBtn, !!viewScoresBtn);
             
             setupControls();
             
@@ -791,6 +798,8 @@
             .then(data => {
                 if (data.username) {
                     currentUsername = data.username;
+                    gamesLeft = data.gamesLeft || 10; // Default to 10 if not set
+                    
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
                     document.getElementById('userInfo').style.display = 'block';
@@ -840,13 +849,15 @@
         }
         
         function startGame() {
-            // Check if auth is required
-            if (authToken && gamesLeft <= 0) {
+            console.log('Starting game... Auth:', authToken, 'Games left:', gamesLeft);
+            
+            // Only block if we HAVE auth AND no games left
+            if (authToken && gamesLeft !== undefined && gamesLeft <= 0) {
                 alert('No games left today! Come back tomorrow!');
                 return;
             }
             
-            console.log('Starting game...');
+            console.log('Game starting successfully!');
             
             // Always use currentUsername when authenticated
             playerName = currentUsername || 'Player';
