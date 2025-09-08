@@ -1176,7 +1176,7 @@
             
             // If auth is active, use auth API
             if (authToken) {
-                fetch(API_URL.replace('/scores', '') + '/scores', {
+                fetch(API_URL + '/scores', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1237,17 +1237,17 @@
         
         function loadScores() {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', API_URL, true);
+            xhr.open('GET', API_URL + '/scores', true);
             
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         try {
                             var newScores = JSON.parse(xhr.responseText);
-                            // Only update if we got valid data
-                            if (Array.isArray(newScores) && newScores.length > 0) {
+                            // Update even if empty (means no scores yet)
+                            if (Array.isArray(newScores)) {
                                 globalScores = newScores;
-                                console.log('✅ Loaded', globalScores.length, 'scores from secure proxy');
+                                console.log('✅ Loaded', globalScores.length, 'NFT holder scores');
                                 document.getElementById('syncStatus').textContent = '🌍 Global';
                                 // Update display if on scores screen
                                 if (document.getElementById('gameOverScreen').style.display === 'flex') {
@@ -1257,7 +1257,7 @@
                                     displayScorePage();
                                 }
                             } else {
-                                console.log('Empty response, keeping existing scores');
+                                console.log('Invalid response format');
                             }
                         } catch(e) {
                             console.log('Parse error, keeping existing scores');
