@@ -631,15 +631,27 @@ app.post('/wallet/verify', async (req, res) => {
     }
 });
 
-// Link wallet to existing account
+// Link wallet to existing account (WITH SIGNATURE VERIFICATION)
 app.post('/wallet/link', authenticateToken, async (req, res) => {
-    const { wallet_address } = req.body;
+    const { wallet_address, signature, message } = req.body;
     
-    if (!wallet_address) {
-        return res.status(400).json({ error: 'Wallet address required' });
+    if (!wallet_address || !signature || !message) {
+        return res.status(400).json({ error: 'Wallet address, signature and message required' });
     }
     
     try {
+        // IMPORTANT: Verify the signature to prove ownership
+        const expectedMessage = `Link wallet to Shacker account: ${req.user.username}\nWallet: ${wallet_address}\nTimestamp: ${message.split('Timestamp: ')[1]}`;
+        
+        // Verify signature using ethers
+        const { ethers } = require('ethers');
+        const recoveredAddress = ethers.utils.verifyMessage(expectedMessage, signature);
+        
+        if (recoveredAddress.toLowerCase() !== wallet_address.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature - you do not own this wallet!' });
+        }
+        
+        // Now we know they really own the wallet
         const updatedUser = await walletAuth.linkWalletToUser(req.user.id, wallet_address);
         
         res.json({

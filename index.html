@@ -1491,17 +1491,30 @@
                 
                 const wallet_address = accounts[0];
                 
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #00ffcc;">🔄 Linking wallet to your account...</span>';
+                // Create message to sign with timestamp
+                const timestamp = new Date().toISOString();
+                const message = `Link wallet to Shacker account: ${currentUsername}\nWallet: ${wallet_address}\nTimestamp: ${timestamp}`;
                 
-                // Simply link wallet to current account - NO SIGNATURE NEEDED
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<span style="color: #00ffcc;">📝 Please sign the message in MetaMask...</span>';
+                
+                // Request signature to PROVE ownership
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, wallet_address]
+                });
+                
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<span style="color: #00ffcc;">🔄 Verifying signature...</span>';
+                
+                // Send wallet WITH signature proof
                 const linkResponse = await fetch(API_URL + '/wallet/link', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + authToken
                     },
-                    body: JSON.stringify({ wallet_address })
+                    body: JSON.stringify({ wallet_address, signature, message })
                 });
                 
                 const data = await linkResponse.json();
