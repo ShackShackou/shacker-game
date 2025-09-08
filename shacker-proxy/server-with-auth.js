@@ -110,7 +110,7 @@ app.post('/register', async (req, res) => {
         const token = jwt.sign(
             { id: newUser.id, username: newUser.username },
             JWT_SECRET,
-            { expiresIn: '365d' } // 1 year instead of 7 days
+            { expiresIn: '100y' } // Basically eternal (100 years)
         );
         
         res.json({ 
@@ -173,7 +173,7 @@ app.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: user.id, username: user.username },
             JWT_SECRET,
-            { expiresIn: '365d' } // 1 year
+            { expiresIn: '100y' } // Eternal (100 years)
         );
         
         res.json({ 
@@ -249,20 +249,55 @@ app.get('/can-play', authenticateToken, async (req, res) => {
     }
 });
 
-// GET scores (public endpoint for backward compatibility)
+// GET scores for NFT holders only
+app.get('/scores/holders', async (req, res) => {
+    try {
+        // Get only users with wallet addresses (NFT holders)
+        const { data: holders, error } = await supabase
+            .from('users')
+            .select('username, best_score, wallet_address')
+            .not('wallet_address', 'is', null)
+            .gt('best_score', 0)
+            .order('best_score', { ascending: false })
+            .limit(50);
+        
+        if (error) throw error;
+        
+        const scores = holders.map(user => ({
+            name: user.username,
+            score: user.best_score,
+            wallet: user.wallet_address.slice(0, 6) + '...',
+            level: Math.floor(user.best_score / 1000) + 1
+        }));
+        
+        res.json(scores);
+        
+    } catch (error) {
+        console.error('Error fetching holder scores:', error);
+        res.status(500).json({ error: 'Failed to fetch holder scores' });
+    }
+});
+
+// GET scores (from Supabase database - ALL PLAYERS)
 app.get('/scores', async (req, res) => {
     try {
-        // Get from JSONBin for now (will migrate to Supabase later)
-        const response = await axios.get(
-            `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,
-            {
-                headers: {
-                    'X-Access-Key': JSONBIN_API_KEY
-                }
-            }
-        );
+        // Get top scores from Supabase users table
+        const { data: topScores, error } = await supabase
+            .from('users')
+            .select('username, best_score')
+            .gt('best_score', 0)
+            .order('best_score', { ascending: false })
+            .limit(100);
         
-        const scores = response.data.record || [];
+        if (error) throw error;
+        
+        // Format for frontend compatibility
+        const scores = topScores.map(user => ({
+            name: user.username,
+            score: user.best_score,
+            level: Math.floor(user.best_score / 1000) + 1 // Estimate level
+        }));
+        
         res.json(scores);
         
     } catch (error) {
