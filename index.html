@@ -721,11 +721,14 @@
                     
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userInfo').style.display = 'block'; // MUST BE VISIBLE for wallet link!
                     document.getElementById('usernameDisplay').textContent = currentUsername;
                     document.getElementById('welcomeUsername').textContent = currentUsername;
                     document.getElementById('welcomeMessage').style.display = 'block';
                     updateGamesLeftDisplay();
+                    
+                    // Check wallet link status immediately after login
+                    checkWalletStatus();
                     
                     loadScores();
                 } else {
@@ -790,7 +793,8 @@
                         document.getElementById('welcomeMessage').style.display = 'block';
                         updateGamesLeftDisplay();
                         
-                        // Wallet linking is now handled via the profile panel
+                        // Check wallet status after registration
+                        checkWalletStatus();
                     }, 1500);
                 } else {
                     document.getElementById('registerError').textContent = data.error || 'Registration failed';
@@ -817,26 +821,13 @@
                     
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userInfo').style.display = 'block'; // MUST BE VISIBLE for wallet link!
                     document.getElementById('usernameDisplay').textContent = currentUsername;
                     document.getElementById('welcomeUsername').textContent = currentUsername;
                     document.getElementById('welcomeMessage').style.display = 'block';
                     
-                    // Check if wallet is linked (from server or localStorage)
-                    const walletFromStorage = localStorage.getItem('walletLinked') === 'true' ? 
-                        localStorage.getItem('walletAddress') : null;
-                    const walletAddress = data.wallet_address || walletFromStorage;
-                    
-                    if (walletAddress) {
-                        storage.setItem('walletAddress', walletAddress);
-                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                        document.getElementById('walletLinkedInfo').style.display = 'block';
-                        document.getElementById('linkedWalletDisplay').textContent = 
-                            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
-                        document.getElementById('walletBadge').classList.add('active');
-                        document.getElementById('walletAddressDisplay').textContent = 
-                            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
-                    }
+                    // Check wallet link status from profile API
+                    checkWalletStatus();
                     
                     updateGamesLeftDisplay();
                     
@@ -885,7 +876,7 @@
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
             
-            // HIDE USER INFO PANEL DURING GAME
+            // HIDE USER INFO PANEL DURING GAME (but it should be visible on start screen!)
             document.getElementById('userInfo').style.display = 'none';
             
             // Make canvas visible
@@ -1544,6 +1535,48 @@
                 code += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             return code;
+        }
+        
+        // Check wallet status from profile
+        function checkWalletStatus() {
+            if (!authToken) return;
+            
+            fetch(API_URL + '/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + authToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wallet_address) {
+                    // Wallet already linked
+                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                    document.getElementById('walletLinkedInfo').style.display = 'block';
+                    document.getElementById('linkedWalletDisplay').textContent = 
+                        data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                    if (document.getElementById('walletBadge')) {
+                        document.getElementById('walletBadge').classList.add('active');
+                    }
+                    if (document.getElementById('walletAddressDisplay')) {
+                        document.getElementById('walletAddressDisplay').textContent = 
+                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                    }
+                } else {
+                    // No wallet linked - show link button
+                    document.getElementById('walletNotLinkedInfo').style.display = 'block';
+                    document.getElementById('walletLinkedInfo').style.display = 'none';
+                    if (document.getElementById('walletBadge')) {
+                        document.getElementById('walletBadge').classList.remove('active');
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Could not check wallet status:', error);
+                // Default to showing link button
+                document.getElementById('walletNotLinkedInfo').style.display = 'block';
+                document.getElementById('walletLinkedInfo').style.display = 'none';
+            });
         }
         
         // Link wallet to existing account
