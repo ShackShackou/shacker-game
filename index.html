@@ -400,14 +400,35 @@
             <h1>🎮 SHACKER LOGIN</h1>
             
             <div id="loginForm" class="auth-form">
-                <!-- MetaMask Option -->
+                <!-- NFT Holders get leaderboard access -->
                 <button class="wallet-connect-btn" onclick="connectWithMetaMask()">
-                    🦊 Connect with MetaMask
+                    💎 Connect Wallet (NFT Holders)
                 </button>
+                
+                <!-- Mobile wallet deep links for OpenSea -->
+                <div id="mobileWalletLinks" style="display: none; margin-top: 15px;">
+                    <p style="color: #888; font-size: 12px;">On mobile? Use these links:</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <a href="metamask://dapp/shacker-game.vercel.app" class="btn" style="font-size: 14px; padding: 10px 20px;">
+                            🦊 MetaMask
+                        </a>
+                        <a href="trust://open_url?url=https://shacker-game.vercel.app" class="btn btn-secondary" style="font-size: 14px; padding: 10px 20px;">
+                            🛡️ Trust
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #ffd700; margin: 15px 0; font-size: 12px;">
+                    ⭐ NFT holders appear on the leaderboard
+                </div>
                 
                 <div class="wallet-or">OR</div>
                 
-                <!-- Traditional Login -->
+                <!-- Free play without leaderboard -->
+                <div style="text-align: center; color: #888; margin-bottom: 10px; font-size: 14px;">
+                    Play for free (no leaderboard)
+                </div>
+                
                 <input type="text" id="loginUsername" class="auth-input" placeholder="Username" maxlength="20">
                 <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
                 
@@ -449,7 +470,7 @@
         <div id="gameOverScreen">
             <h2 style="font-size: 48px; color: #ff0088; margin-bottom: 10px;">GAME OVER</h2>
             <div id="finalScore" style="font-size: 32px; color: #00ffcc; margin-bottom: 20px;">Score: 0</div>
-            <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h3>
+            <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 NFT HOLDERS LEADERBOARD</h3>
             <div style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 320px; display: flex; flex-direction: column; justify-content: space-between;">
                 <div id="scoresList" style="height: 260px;"></div>
                 <div id="gameOverPagination" class="pagination" style="margin-top: 10px;"></div>
@@ -459,7 +480,7 @@
         
         <!-- SCORES VIEW SCREEN -->
         <div id="scoresViewScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(26,26,46,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white;">
-            <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h2>
+            <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 NFT HOLDERS LEADERBOARD</h2>
             <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
                 <div id="scoresList2" style="height: 320px;"></div>
                 <div id="pagination" class="pagination"></div>
@@ -564,6 +585,14 @@
             
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            
+            // Detect if on mobile or in iframe (OpenSea)
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const isInIframe = window.parent !== window;
+            
+            if (isMobile || isInIframe) {
+                document.getElementById('mobileWalletLinks').style.display = 'block';
+            }
             
             if (authToken && currentUsername) {
                 checkAuth();
@@ -1061,6 +1090,19 @@
             saveScore();
             
             document.getElementById('finalScore').textContent = 'Score: ' + score;
+            
+            // Check if user has wallet/NFT for leaderboard
+            var hasWallet = storage.getItem('walletAddress');
+            if (!hasWallet) {
+                // Show message for non-NFT holders
+                document.getElementById('finalScore').innerHTML = 
+                    'Score: ' + score + '<br>' +
+                    '<div style="color: #ffd700; font-size: 16px; margin-top: 10px;">' +
+                    '🔒 Get an NFT to appear on the leaderboard!<br>' +
+                    '<a href="https://opensea.io/collection/your-collection" target="_blank" style="color: #00ffcc;">Get your NFT →</a>' +
+                    '</div>';
+            }
+            
             document.getElementById('gameOverScreen').style.display = 'flex';
             
             // Add new score to global array for immediate display
@@ -1254,8 +1296,11 @@
                         medalStyle = 'display: inline-block; width: 30px; text-align: center;';
                     }
                     
+                    // Add wallet badge if player has wallet
+                    var walletBadge = entry.hasWallet ? ' 🦊' : '';
+                    
                     html += '<div class="score-entry">';
-                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + (entry.name || 'Anonymous') + '</span>';
+                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + (entry.name || 'Anonymous') + walletBadge + '</span>';
                     html += '<span>' + entry.score + '</span>';
                     html += '</div>';
                 } else {
@@ -1339,8 +1384,11 @@
                         medalStyle = 'display: inline-block; width: 30px; text-align: center;';
                     }
                     
+                    // Add wallet badge if player has wallet
+                    var walletBadge = entry.hasWallet ? ' 🦊' : '';
+                    
                     html += '<div class="score-entry">';
-                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + (entry.name || 'Anonymous') + '</span>';
+                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + (entry.name || 'Anonymous') + walletBadge + '</span>';
                     html += '<span>' + entry.score + '</span>';
                     html += '</div>';
                 } else {
@@ -1401,24 +1449,31 @@
         
         // WALLET CONNECTION FUNCTIONS
         async function connectWithMetaMask() {
-            // Check if in iframe (OpenSea)
-            if (window.parent !== window) {
-                document.getElementById('loginError').textContent = 'Wallet connection not available in OpenSea. Please use email login or play directly at shacker-game.vercel.app';
-                return;
-            }
-            
-            if (typeof window.ethereum === 'undefined') {
-                document.getElementById('loginError').textContent = 'MetaMask is not installed! Please install it from metamask.io';
-                return;
-            }
+            // Use WalletConnect which works in iframes!
+            document.getElementById('loginError').innerHTML = 
+                '<div style="color: #00ffcc;">🔄 Connecting wallet...</div>';
             
             try {
-                // Request account access
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_requestAccounts' 
-                });
+                let provider;
+                let address;
                 
-                const address = accounts[0];
+                // Try WalletConnect first (works in OpenSea iframes)
+                if (window.WalletConnectHelper) {
+                    const result = await window.WalletConnectHelper.connectWallet();
+                    if (result.success) {
+                        provider = result.provider;
+                        address = result.address;
+                    }
+                } else if (window.ethereum) {
+                    // Fallback to direct connection
+                    const accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                    provider = window.ethereum;
+                    address = accounts[0];
+                } else {
+                    throw new Error('No wallet available');
+                }
                 
                 // Get nonce from server
                 const nonceResponse = await fetch(API_URL + '/wallet/nonce', {
@@ -1433,8 +1488,8 @@
                 // Create message to sign
                 const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
                 
-                // Request signature
-                const signature = await window.ethereum.request({
+                // Request signature using the appropriate provider
+                const signature = await provider.request({
                     method: 'personal_sign',
                     params: [message, address]
                 });
@@ -1446,7 +1501,19 @@
                     body: JSON.stringify({ address, signature, nonce })
                 });
                 
-                if (!verifyResponse.ok) throw new Error('Verification failed');
+                if (!verifyResponse.ok) {
+                    const errorData = await verifyResponse.json();
+                    
+                    // Special handling for NFT requirement
+                    if (errorData.error === 'NFT required') {
+                        document.getElementById('loginError').innerHTML = 
+                            errorData.message + '<br><br>' +
+                            '<a href="' + errorData.buyLink + '" target="_blank" style="color: #00ffcc;">🛒 Get your NFT on OpenSea</a>';
+                        throw new Error('NFT required');
+                    }
+                    
+                    throw new Error('Verification failed');
+                }
                 
                 const data = await verifyResponse.json();
                 
@@ -1536,7 +1603,53 @@
         }
     </script>
     
-    <!-- Include wallet connect script -->
-    <script src="wallet-connect.js"></script>
+    <!-- WalletConnect Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <script>
+    // Enhanced WalletConnect for OpenSea compatibility
+    window.WalletConnectHelper = {
+        provider: null,
+        
+        async connectWallet() {
+            try {
+                // Try WalletConnect first (works in iframes)
+                const provider = new WalletConnectProvider.default({
+                    infuraId: "9aa3d95b3bc440fa88ea12eaa4456161",
+                    rpc: {
+                        1: "https://eth-mainnet.public.blastapi.io"
+                    }
+                });
+                
+                // Enable session
+                await provider.enable();
+                this.provider = provider;
+                
+                const accounts = await provider.request({ 
+                    method: 'eth_accounts' 
+                });
+                
+                return {
+                    success: true,
+                    address: accounts[0],
+                    provider: provider
+                };
+                
+            } catch (error) {
+                // Fallback to direct MetaMask if available
+                if (window.ethereum) {
+                    const accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                    return {
+                        success: true,
+                        address: accounts[0],
+                        provider: window.ethereum
+                    };
+                }
+                throw error;
+            }
+        }
+    };
+    </script>
 </body>
 </html>

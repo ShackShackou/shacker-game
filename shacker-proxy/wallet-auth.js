@@ -135,22 +135,36 @@ class WalletAuth {
         return data;
     }
 
-    // Vérifier la possession d'un NFT (nécessite un provider Ethereum)
+    // Vérifier la possession d'un NFT avec ethers.js
     async checkNFTOwnership(walletAddress, contractAddress, tokenId = null) {
         try {
-            // Pour l'instant, on retourne true pour les tests
-            // En production, il faudrait utiliser ethers.js avec un provider
-            // pour interroger le smart contract
+            const { ethers } = require('ethers');
             
-            // const provider = new ethers.providers.JsonRpcProvider(process.env.ETH_RPC_URL);
-            // const contract = new ethers.Contract(contractAddress, ['function balanceOf(address) view returns (uint256)'], provider);
-            // const balance = await contract.balanceOf(walletAddress);
-            // return balance.gt(0);
+            // Use public RPC for checking (Infura, Alchemy, or public endpoint)
+            const provider = new ethers.providers.JsonRpcProvider(
+                process.env.ETH_RPC_URL || 'https://eth-mainnet.public.blastapi.io'
+            );
             
-            console.log(`Checking NFT ownership for ${walletAddress} on contract ${contractAddress}`);
-            return true; // Placeholder
+            // ERC721 ABI for balanceOf
+            const abi = [
+                'function balanceOf(address owner) view returns (uint256)',
+                'function ownerOf(uint256 tokenId) view returns (address)'
+            ];
+            
+            const contract = new ethers.Contract(contractAddress, abi, provider);
+            
+            // Check if wallet owns any NFT from this collection
+            const balance = await contract.balanceOf(walletAddress);
+            
+            console.log(`NFT Check: ${walletAddress} owns ${balance.toString()} NFTs from ${contractAddress}`);
+            
+            return balance.gt(0);
         } catch (error) {
             console.error('NFT check failed:', error);
+            // En dev/test, on peut retourner true pour tester
+            if (process.env.NODE_ENV === 'development') {
+                return true;
+            }
             return false;
         }
     }

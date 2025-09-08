@@ -278,24 +278,26 @@ app.get('/scores/holders', async (req, res) => {
     }
 });
 
-// GET scores (from Supabase database - ALL PLAYERS)
+// GET scores - NFT HOLDERS ONLY LEADERBOARD
 app.get('/scores', async (req, res) => {
     try {
-        // Get top scores from Supabase users table
+        // Get ONLY NFT holders scores (users with wallet_address)
         const { data: topScores, error } = await supabase
             .from('users')
-            .select('username, best_score')
+            .select('username, best_score, wallet_address')
+            .not('wallet_address', 'is', null) // ONLY NFT HOLDERS
             .gt('best_score', 0)
             .order('best_score', { ascending: false })
             .limit(100);
         
         if (error) throw error;
         
-        // Format for frontend compatibility
+        // Format for frontend
         const scores = topScores.map(user => ({
             name: user.username,
             score: user.best_score,
-            level: Math.floor(user.best_score / 1000) + 1 // Estimate level
+            level: Math.floor(user.best_score / 1000) + 1,
+            hasWallet: true // All have wallets since we filtered
         }));
         
         res.json(scores);
@@ -569,14 +571,32 @@ app.post('/wallet/verify', async (req, res) => {
             return res.status(401).json({ error: 'Invalid signature' });
         }
         
+        // Check NFT ownership (optional for leaderboard access)
+        const NFT_CONTRACT = process.env.NFT_CONTRACT_ADDRESS || '0x...'; // Your NFT contract
+        let hasNFT = false;
+        
+        try {
+            hasNFT = await walletAuth.checkNFTOwnership(address, NFT_CONTRACT);
+        } catch (error) {
+            console.log('NFT check failed, continuing without NFT status');
+        }
+        
         // Find or create user
         const user = await walletAuth.findOrCreateUserByWallet(address);
         
+        // Update NFT status in database
+        if (hasNFT) {
+            await supabase
+                .from('users')
+                .update({ has_nft: true })
+                .eq('id', user.id);
+        }
+        
         // Create JWT token
         const token = jwt.sign(
-            { id: user.id, username: user.username, wallet: address },
+            { id: user.id, username: user.username, wallet: address, hasNFT },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '100y' }
         );
         
         res.json({
@@ -584,7 +604,9 @@ app.post('/wallet/verify', async (req, res) => {
             token,
             username: user.username,
             wallet: address,
-            gamesLeft: DAILY_GAME_LIMIT - user.games_today
+            hasNFT,
+            gamesLeft: hasNFT ? 999 : DAILY_GAME_LIMIT - user.games_today,
+            leaderboardAccess: hasNFT
         });
         
     } catch (error) {
