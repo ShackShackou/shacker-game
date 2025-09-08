@@ -278,14 +278,14 @@ app.get('/scores/holders', async (req, res) => {
     }
 });
 
-// GET scores - NFT HOLDERS ONLY LEADERBOARD
+// GET scores - ALL PLAYERS LEADERBOARD
 app.get('/scores', async (req, res) => {
     try {
-        // Get ONLY NFT holders scores (users with wallet_address)
+        // Get ALL players scores (everyone can appear on leaderboard)
         const { data: topScores, error } = await supabase
             .from('users')
             .select('username, best_score, wallet_address')
-            .not('wallet_address', 'is', null) // ONLY NFT HOLDERS
+            // REMOVED wallet filter - show EVERYONE
             .gt('best_score', 0)
             .order('best_score', { ascending: false })
             .limit(100);
@@ -297,7 +297,7 @@ app.get('/scores', async (req, res) => {
             name: user.username,
             score: user.best_score,
             level: Math.floor(user.best_score / 1000) + 1,
-            hasWallet: true // All have wallets since we filtered
+            hasWallet: !!user.wallet_address // Show who has wallet
         }));
         
         res.json(scores);
