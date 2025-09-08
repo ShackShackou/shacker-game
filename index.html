@@ -1682,41 +1682,43 @@
                                 '</div>' +
                             '</div>';
                         } else {
-                            // Popup blocked or in sandboxed iframe - show copy-paste solution
+                            // In OpenSea iframe - show professional message like other NFT projects
                             document.getElementById('walletNotLinkedInfo').innerHTML = 
-                            '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px;">' +
-                                '<div style="color: #ffd700; font-size: 16px; margin-bottom: 15px;">' +
-                                    '⚠️ OpenSea blocks popups! Copy this link:' +
+                            '<div style="padding: 20px; background: linear-gradient(135deg, rgba(246,133,27,0.3), rgba(226,118,27,0.3)); border: 2px solid #f6851b; border-radius: 15px; text-align: center;">' +
+                                '<div style="color: #00ffcc; font-size: 20px; font-weight: bold; margin-bottom: 15px;">' +
+                                    '🎮 PLAY THE FULL GAME' +
                                 '</div>' +
-                                '<input type="text" value="' + linkUrl + '" id="walletLinkUrl" readonly style="' +
-                                    'width: 100%;' +
-                                    'padding: 10px;' +
-                                    'margin-bottom: 10px;' +
-                                    'border: 1px solid #f6851b;' +
-                                    'border-radius: 5px;' +
-                                    'background: rgba(0,0,0,0.5);' +
-                                    'color: #00ffcc;' +
-                                    'font-size: 12px;">' +
-                                '<button onclick="document.getElementById(\'walletLinkUrl\').select(); document.execCommand(\'copy\'); this.textContent = \'✅ COPIED! Open new tab and paste\';" style="' +
-                                    'display: block;' +
-                                    'width: 100%;' +
+                                '<div style="color: #ffd700; font-size: 16px; margin-bottom: 20px;">' +
+                                    'Connect your NFT wallet on our official site:' +
+                                '</div>' +
+                                '<a href="https://shacker-game.vercel.app" target="_blank" style="' +
+                                    'display: inline-block;' +
                                     'background: linear-gradient(135deg, #f6851b, #e2761b);' +
                                     'color: white;' +
-                                    'padding: 15px 30px;' +
-                                    'border-radius: 10px;' +
-                                    'border: none;' +
-                                    'cursor: pointer;' +
+                                    'padding: 20px 40px;' +
+                                    'border-radius: 15px;' +
+                                    'text-decoration: none;' +
                                     'font-weight: bold;' +
-                                    'font-size: 18px;">' +
-                                    '📋 COPY LINK' +
-                                '</button>' +
-                                '<div style="color: #00ffcc; margin-top: 15px; font-size: 14px; font-weight: bold;">' +
-                                    'STEPS:<br>' +
-                                    '1️⃣ Click COPY LINK<br>' +
-                                    '2️⃣ Open new browser tab (Ctrl+T)<br>' +
-                                    '3️⃣ Paste link (Ctrl+V) and press Enter<br>' +
-                                    '4️⃣ Connect wallet there<br>' +
-                                    '5️⃣ Come back here when done!' +
+                                    'font-size: 22px;' +
+                                    'box-shadow: 0 5px 20px rgba(246,133,27,0.5);' +
+                                    'transition: transform 0.2s;"' +
+                                    'onmouseover="this.style.transform=\'scale(1.05)\'"' +
+                                    'onmouseout="this.style.transform=\'scale(1)\'">' +
+                                    '🚀 SHACKER-GAME.VERCEL.APP' +
+                                '</a>' +
+                                '<div style="color: #aaa; margin-top: 20px; font-size: 14px; line-height: 1.6;">' +
+                                    '<div style="color: #00ffcc; font-weight: bold; margin-bottom: 10px;">✨ FULL FEATURES:</div>' +
+                                    '• Connect MetaMask directly<br>' +
+                                    '• NFT holder leaderboard<br>' +
+                                    '• Daily game limits<br>' +
+                                    '• Wallet verification<br>' +
+                                    '• No iframe restrictions!' +
+                                '</div>' +
+                                '<div style="margin-top: 20px; padding: 10px; background: rgba(0,255,136,0.1); border: 1px solid #00ff88; border-radius: 10px;">' +
+                                    '<div style="color: #00ff88; font-size: 12px;">' +
+                                        '💡 <b>Pro Tip:</b> OpenSea is for buying/selling NFTs.<br>' +
+                                        'Play the game on our official site for the best experience!' +
+                                    '</div>' +
                                 '</div>' +
                             '</div>';
                         }
