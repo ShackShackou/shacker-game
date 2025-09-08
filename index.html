@@ -1516,8 +1516,15 @@
             
             if (isInIframe) {
                 // On OpenSea - open in new window
-                const linkUrl = `${window.location.origin}/wallet-link.html?token=${authToken}&username=${currentUsername}`;
-                window.open(linkUrl, '_blank', 'width=500,height=600');
+                // Use absolute URL for the game domain, not OpenSea's domain
+                const linkUrl = `https://shacker-game.vercel.app/wallet-link.html?token=${authToken}&username=${currentUsername}`;
+                console.log('Opening wallet link popup:', linkUrl);
+                const popup = window.open(linkUrl, '_blank', 'width=500,height=600');
+                
+                if (!popup || popup.closed || typeof popup.closed == 'undefined') {
+                    alert('⚠️ Popup was blocked! Please allow popups for this site and try again.');
+                    return;
+                }
                 
                 document.getElementById('walletNotLinkedInfo').innerHTML = 
                     '<span style="color: #ffd700;">🔄 Complete wallet linking in the popup window...</span>';
