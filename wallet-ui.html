@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Connection UI - Shacker Game</title>
+    <style>
+        /* Wallet Button Styles */
+        .wallet-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .wallet-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .wallet-btn.connected {
+            background: linear-gradient(135deg, #00d084 0%, #00a676 100%);
+        }
+
+        .metamask-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Modal Styles */
+        .wallet-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wallet-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            color: white;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 255, 204, 0.3);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #00ffcc;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .connection-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00ffcc;
+            transform: translateX(5px);
+        }
+
+        .option-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .option-details h3 {
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .option-details p {
+            color: #888;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .or-divider {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #333;
+        }
+
+        .or-divider::before {
+            left: 0;
+        }
+
+        .or-divider::after {
+            right: 0;
+        }
+
+        .wallet-info {
+            background: rgba(0, 255, 204, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            color: #00ffcc;
+            font-size: 14px;
+        }
+
+        .wallet-balance {
+            color: #ffd700;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .link-wallet-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .link-wallet-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 30px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #ff4444;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-message.success {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            display: block;
+        }
+
+        .status-message.error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            display: block;
+        }
+
+        .nft-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .connecting {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Wallet Connection Button -->
+    <div class="wallet-section">
+        <button id="walletBtn" class="wallet-btn" onclick="openWalletModal()">
+            <svg class="metamask-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+            </svg>
+            <span id="walletBtnText">Connect Wallet</span>
+        </button>
+    </div>
+
+    <!-- Wallet Connection Modal -->
+    <div id="walletModal" class="wallet-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeWalletModal()">&times;</button>
+            
+            <div class="modal-header">
+                <h2>🎮 Connect to Shacker</h2>
+                <p style="color: #888;">Choose your authentication method</p>
+            </div>
+
+            <div class="connection-options">
+                <!-- MetaMask Option -->
+                <div class="option-btn" onclick="connectMetaMask()">
+                    <div class="option-icon" style="background: linear-gradient(135deg, #f6851b, #e2761b);">
+                        🦊
+                    </div>
+                    <div class="option-details">
+                        <h3>Connect with MetaMask</h3>
+                        <p>Use your crypto wallet for instant access</p>
+                    </div>
+                </div>
+
+                <div class="or-divider">OR</div>
+
+                <!-- Email Login Option -->
+                <div class="option-btn" onclick="showEmailLogin()">
+                    <div class="option-icon" style="background: linear-gradient(135deg, #00d084, #00a676);">
+                        📧
+                    </div>
+                    <div class="option-details">
+                        <h3>Login with Email</h3>
+                        <p>Use your existing account credentials</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Info (shown when connected) -->
+            <div id="walletInfo" class="wallet-info" style="display: none;">
+                <strong>Connected Wallet:</strong>
+                <div class="wallet-address" id="walletAddress">0x...</div>
+                <div class="wallet-balance" id="walletBalance">Balance: -- ETH</div>
+                
+                <div id="nftStatus" style="margin-top: 10px;">
+                    <span id="nftBadge" class="nft-badge" style="display: none;">✨ NFT Holder</span>
+                </div>
+
+                <button class="link-wallet-btn" onclick="linkWallet()" id="linkBtn" style="display: none;">
+                    🔗 Link Wallet to Account
+                </button>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
+
+    <!-- Include the wallet connector script -->
+    <script src="wallet-connect.js"></script>
+    
+    <script>
+        // Initialize wallet connector
+        const walletConnector = new WalletConnector('https://shacker-proxy.onrender.com');
+        
+        // UI Functions
+        function openWalletModal() {
+            document.getElementById('walletModal').classList.add('active');
+        }
+        
+        function closeWalletModal() {
+            document.getElementById('walletModal').classList.remove('active');
+        }
+        
+        function showEmailLogin() {
+            // Redirect to email login or show email login form
+            window.location.href = '#login';
+            closeWalletModal();
+        }
+        
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        async function connectMetaMask() {
+            const walletBtn = document.getElementById('walletBtn');
+            walletBtn.classList.add('connecting');
+            
+            try {
+                // Connect wallet
+                const { address, chainId } = await walletConnector.connectWallet();
+                
+                // Update UI
+                document.getElementById('walletAddress').textContent = address;
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('walletBtnText').textContent = walletConnector.formatAddress(address);
+                walletBtn.classList.add('connected');
+                
+                // Authenticate with wallet
+                const authResult = await walletConnector.authenticateWithWallet();
+                
+                if (authResult.success) {
+                    showStatus('✅ Wallet connected successfully!', 'success');
+                    
+                    // Store auth token
+                    localStorage.setItem('shackerToken', authResult.token);
+                    localStorage.setItem('shackerUsername', authResult.username);
+                    localStorage.setItem('walletAddress', address);
+                    
+                    // Check NFT ownership (optional)
+                    await checkNFTOwnership(address);
+                    
+                    // Redirect to game after 2 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Connection failed:', error);
+                showStatus('❌ ' + error.message, 'error');
+            } finally {
+                walletBtn.classList.remove('connecting');
+            }
+        }
+        
+        async function linkWallet() {
+            const authToken = localStorage.getItem('shackerToken');
+            if (!authToken) {
+                showStatus('❌ Please login first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await walletConnector.linkWalletToAccount(authToken);
+                showStatus('✅ Wallet linked to your account!', 'success');
+                document.getElementById('linkBtn').style.display = 'none';
+            } catch (error) {
+                showStatus('❌ ' + error.message, 'error');
+            }
+        }
+        
+        async function checkNFTOwnership(address) {
+            // Your NFT contract address on OpenSea
+            const NFT_CONTRACT = '0x...'; // Replace with your actual contract
+            
+            try {
+                const hasNFT = await walletConnector.checkNFTOwnership(NFT_CONTRACT);
+                if (hasNFT) {
+                    document.getElementById('nftBadge').style.display = 'inline-block';
+                }
+            } catch (error) {
+                console.error('NFT check failed:', error);
+            }
+        }
+        
+        // Check if wallet is already connected on page load
+        window.addEventListener('load', async () => {
+            const savedWallet = localStorage.getItem('walletAddress');
+            if (savedWallet && walletConnector.isMetaMaskInstalled()) {
+                try {
+                    await connectMetaMask();
+                } catch (error) {
+                    console.log('Auto-connect failed:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -445,9 +445,128 @@ app.get('/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// Import wallet auth module
+const WalletAuth = require('./wallet-auth');
+const walletAuth = new WalletAuth(supabase, JWT_SECRET);
+
+// WALLET ROUTES
+
+// Get nonce for wallet signature
+app.post('/wallet/nonce', async (req, res) => {
+    const { address } = req.body;
+    
+    if (!address) {
+        return res.status(400).json({ error: 'Wallet address required' });
+    }
+    
+    try {
+        const nonce = walletAuth.generateNonce();
+        await walletAuth.saveNonce(address, nonce);
+        res.json({ nonce });
+    } catch (error) {
+        console.error('Nonce generation error:', error);
+        res.status(500).json({ error: 'Failed to generate nonce' });
+    }
+});
+
+// Verify wallet signature and authenticate
+app.post('/wallet/verify', async (req, res) => {
+    const { address, signature, nonce } = req.body;
+    
+    if (!address || !signature || !nonce) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        // Validate nonce
+        const nonceValid = await walletAuth.validateNonce(address, nonce);
+        if (!nonceValid) {
+            return res.status(401).json({ error: 'Invalid or expired nonce' });
+        }
+        
+        // Recreate the message that was signed
+        const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
+        
+        // Verify signature
+        const isValid = walletAuth.verifySignature(message, signature, address);
+        if (!isValid) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        // Find or create user
+        const user = await walletAuth.findOrCreateUserByWallet(address);
+        
+        // Create JWT token
+        const token = jwt.sign(
+            { id: user.id, username: user.username, wallet: address },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        res.json({
+            success: true,
+            token,
+            username: user.username,
+            wallet: address,
+            gamesLeft: DAILY_GAME_LIMIT - user.games_today
+        });
+        
+    } catch (error) {
+        console.error('Wallet verification error:', error);
+        res.status(500).json({ error: 'Wallet verification failed' });
+    }
+});
+
+// Link wallet to existing account
+app.post('/wallet/link', authenticateToken, async (req, res) => {
+    const { wallet_address } = req.body;
+    
+    if (!wallet_address) {
+        return res.status(400).json({ error: 'Wallet address required' });
+    }
+    
+    try {
+        const updatedUser = await walletAuth.linkWalletToUser(req.user.id, wallet_address);
+        
+        res.json({
+            success: true,
+            message: 'Wallet linked successfully',
+            wallet: wallet_address
+        });
+        
+    } catch (error) {
+        console.error('Wallet linking error:', error);
+        res.status(500).json({ error: error.message || 'Failed to link wallet' });
+    }
+});
+
+// Check NFT ownership
+app.post('/wallet/check-nft', async (req, res) => {
+    const { wallet_address, contract_address, token_id } = req.body;
+    
+    if (!wallet_address || !contract_address) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        const ownsNFT = await walletAuth.checkNFTOwnership(wallet_address, contract_address, token_id);
+        
+        res.json({
+            owns_nft: ownsNFT,
+            wallet: wallet_address,
+            contract: contract_address
+        });
+        
+    } catch (error) {
+        console.error('NFT check error:', error);
+        res.status(500).json({ error: 'NFT ownership check failed' });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Shacker Auth Server running on port ${PORT}`);
     console.log(`📊 Supabase connected to: ${supabaseUrl}`);
     console.log(`🔐 Auth system enabled with ${DAILY_GAME_LIMIT} games/day limit`);
+    console.log(`🦊 MetaMask wallet auth enabled`);
 });

@@ -287,6 +287,66 @@
             background: #667eea;
         }
         
+        /* Wallet Styles */
+        .wallet-connect-btn {
+            background: linear-gradient(135deg, #f6851b, #e2761b);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .wallet-connect-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(246, 133, 27, 0.4);
+        }
+        
+        .wallet-or {
+            color: #666;
+            margin: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .wallet-or::before,
+        .wallet-or::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #333;
+        }
+        
+        .wallet-or::before { left: 0; }
+        .wallet-or::after { right: 0; }
+        
+        .wallet-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: none;
+            z-index: 200;
+        }
+        
+        .wallet-badge.active {
+            display: block;
+        }
+        
         #gameOverScreen {
             position: absolute;
             width: 100%;
@@ -330,11 +390,24 @@
         
         <div id="syncStatus">🔄 Checking...</div>
         
+        <!-- Wallet Badge -->
+        <div id="walletBadge" class="wallet-badge">
+            🦊 <span id="walletAddressDisplay"></span>
+        </div>
+        
         <!-- LOGIN SCREEN -->
         <div id="loginScreen">
             <h1>🎮 SHACKER LOGIN</h1>
             
             <div id="loginForm" class="auth-form">
+                <!-- MetaMask Option -->
+                <button class="wallet-connect-btn" onclick="connectWithMetaMask()">
+                    🦊 Connect with MetaMask
+                </button>
+                
+                <div class="wallet-or">OR</div>
+                
+                <!-- Traditional Login -->
                 <input type="text" id="loginUsername" class="auth-input" placeholder="Username" maxlength="20">
                 <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
                 
@@ -1325,6 +1398,110 @@
         if (window.parent !== window) {
             console.log('Running in iframe (OpenSea compatible with secure proxy)');
         }
+        
+        // WALLET CONNECTION FUNCTIONS
+        async function connectWithMetaMask() {
+            if (typeof window.ethereum === 'undefined') {
+                document.getElementById('loginError').textContent = 'MetaMask is not installed! Please install it from metamask.io';
+                return;
+            }
+            
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                const address = accounts[0];
+                
+                // Get nonce from server
+                const nonceResponse = await fetch(API_URL + '/wallet/nonce', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address })
+                });
+                
+                if (!nonceResponse.ok) throw new Error('Failed to get nonce');
+                const { nonce } = await nonceResponse.json();
+                
+                // Create message to sign
+                const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
+                
+                // Request signature
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, address]
+                });
+                
+                // Verify with server
+                const verifyResponse = await fetch(API_URL + '/wallet/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, signature, nonce })
+                });
+                
+                if (!verifyResponse.ok) throw new Error('Verification failed');
+                
+                const data = await verifyResponse.json();
+                
+                if (data.success) {
+                    // Store auth data
+                    authToken = data.token;
+                    currentUsername = data.username;
+                    gamesLeft = data.gamesLeft;
+                    
+                    storage.setItem('shackerToken', authToken);
+                    storage.setItem('shackerUsername', currentUsername);
+                    storage.setItem('walletAddress', address);
+                    
+                    // Update UI
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'flex';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('usernameDisplay').textContent = currentUsername;
+                    document.getElementById('welcomeUsername').textContent = currentUsername;
+                    document.getElementById('nameInput').style.display = 'none';
+                    document.getElementById('welcomeMessage').style.display = 'block';
+                    
+                    // Show wallet badge
+                    document.getElementById('walletBadge').classList.add('active');
+                    document.getElementById('walletAddressDisplay').textContent = 
+                        address.slice(0, 6) + '...' + address.slice(-4);
+                    
+                    updateGamesLeftDisplay();
+                    loadScores();
+                }
+                
+            } catch (error) {
+                console.error('MetaMask connection error:', error);
+                document.getElementById('loginError').textContent = 
+                    error.message || 'Failed to connect with MetaMask';
+            }
+        }
+        
+        // Check if wallet was previously connected
+        window.addEventListener('load', function() {
+            const walletAddress = storage.getItem('walletAddress');
+            if (walletAddress) {
+                document.getElementById('walletBadge').classList.add('active');
+                document.getElementById('walletAddressDisplay').textContent = 
+                    walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+            }
+        });
+        
+        // Listen for account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', function(accounts) {
+                if (accounts.length === 0) {
+                    // User disconnected wallet
+                    storage.removeItem('walletAddress');
+                    document.getElementById('walletBadge').classList.remove('active');
+                }
+            });
+        }
     </script>
+    
+    <!-- Include wallet connect script -->
+    <script src="wallet-connect.js"></script>
 </body>
 </html>
