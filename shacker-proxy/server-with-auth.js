@@ -106,11 +106,11 @@ app.post('/register', async (req, res) => {
             throw error;
         }
         
-        // Create JWT token
+        // Create JWT token with longer expiry
         const token = jwt.sign(
             { id: newUser.id, username: newUser.username },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '365d' } // 1 year instead of 7 days
         );
         
         res.json({ 
@@ -169,11 +169,11 @@ app.post('/login', async (req, res) => {
             user.games_today = 0;
         }
         
-        // Create JWT token
+        // Create JWT token with longer expiry
         const token = jwt.sign(
             { id: user.id, username: user.username },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '365d' } // 1 year
         );
         
         res.json({ 
@@ -423,6 +423,47 @@ app.post('/scores-public', async (req, res) => {
     } catch (error) {
         console.error('Error saving public score:', error);
         res.status(500).json({ error: 'Failed to save score' });
+    }
+});
+
+// UPDATE username
+app.post('/update-username', authenticateToken, async (req, res) => {
+    const { newUsername } = req.body;
+    
+    if (!newUsername || newUsername.length < 3 || newUsername.length > 20) {
+        return res.status(400).json({ error: 'Username must be 3-20 characters' });
+    }
+    
+    try {
+        // Check if username already taken
+        const { data: existing } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', newUsername)
+            .single();
+        
+        if (existing) {
+            return res.status(400).json({ error: 'Username already taken' });
+        }
+        
+        // Update username
+        const { data: updated, error } = await supabase
+            .from('users')
+            .update({ username: newUsername })
+            .eq('id', req.user.id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        res.json({ 
+            success: true, 
+            username: updated.username 
+        });
+        
+    } catch (error) {
+        console.error('Username update error:', error);
+        res.status(500).json({ error: 'Failed to update username' });
     }
 });
 

@@ -1401,6 +1401,12 @@
         
         // WALLET CONNECTION FUNCTIONS
         async function connectWithMetaMask() {
+            // Check if in iframe (OpenSea)
+            if (window.parent !== window) {
+                document.getElementById('loginError').textContent = 'Wallet connection not available in OpenSea. Please use email login or play directly at shacker-game.vercel.app';
+                return;
+            }
+            
             if (typeof window.ethereum === 'undefined') {
                 document.getElementById('loginError').textContent = 'MetaMask is not installed! Please install it from metamask.io';
                 return;
@@ -1445,6 +1451,35 @@
                 const data = await verifyResponse.json();
                 
                 if (data.success) {
+                    // Check if it's a new user (username starts with Player_)
+                    if (data.username && data.username.startsWith('Player_')) {
+                        // Ask for custom username
+                        const customUsername = prompt('🎮 Choose your username:', '');
+                        
+                        if (customUsername && customUsername.trim().length > 2) {
+                            // Update username on server
+                            try {
+                                const updateResponse = await fetch(API_URL + '/update-username', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': 'Bearer ' + data.token
+                                    },
+                                    body: JSON.stringify({ 
+                                        newUsername: customUsername.trim() 
+                                    })
+                                });
+                                
+                                if (updateResponse.ok) {
+                                    const updateData = await updateResponse.json();
+                                    data.username = updateData.username || customUsername.trim();
+                                }
+                            } catch (err) {
+                                console.error('Failed to update username:', err);
+                            }
+                        }
+                    }
+                    
                     // Store auth data
                     authToken = data.token;
                     currentUsername = data.username;
