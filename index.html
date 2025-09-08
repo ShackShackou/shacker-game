@@ -1682,14 +1682,24 @@
                                 '</div>' +
                             '</div>';
                         } else {
-                            // Popup blocked - show manual link with onclick handler
+                            // Popup blocked or in sandboxed iframe - show copy-paste solution
                             document.getElementById('walletNotLinkedInfo').innerHTML = 
                             '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px;">' +
                                 '<div style="color: #ffd700; font-size: 16px; margin-bottom: 15px;">' +
-                                    '⚠️ Popup blocked! Click below to connect:' +
+                                    '⚠️ OpenSea blocks popups! Copy this link:' +
                                 '</div>' +
-                                '<button onclick="window.open(\'' + linkUrl + '\', \'_blank\')" style="' +
-                                    'display: inline-block;' +
+                                '<input type="text" value="' + linkUrl + '" id="walletLinkUrl" readonly style="' +
+                                    'width: 100%;' +
+                                    'padding: 10px;' +
+                                    'margin-bottom: 10px;' +
+                                    'border: 1px solid #f6851b;' +
+                                    'border-radius: 5px;' +
+                                    'background: rgba(0,0,0,0.5);' +
+                                    'color: #00ffcc;' +
+                                    'font-size: 12px;">' +
+                                '<button onclick="document.getElementById(\'walletLinkUrl\').select(); document.execCommand(\'copy\'); this.textContent = \'✅ COPIED! Open new tab and paste\';" style="' +
+                                    'display: block;' +
+                                    'width: 100%;' +
                                     'background: linear-gradient(135deg, #f6851b, #e2761b);' +
                                     'color: white;' +
                                     'padding: 15px 30px;' +
@@ -1697,14 +1707,16 @@
                                     'border: none;' +
                                     'cursor: pointer;' +
                                     'font-weight: bold;' +
-                                    'font-size: 18px;' +
-                                    'animation: pulse 2s infinite;">' +
-                                    '🔗 CONNECT WALLET NOW' +
+                                    'font-size: 18px;">' +
+                                    '📋 COPY LINK' +
                                 '</button>' +
-                                '<div style="color: #aaa; margin-top: 15px; font-size: 12px;">' +
-                                    '✅ Opens in new tab<br>' +
-                                    '✅ Auto-connects MetaMask<br>' +
-                                    '✅ Returns here when done' +
+                                '<div style="color: #00ffcc; margin-top: 15px; font-size: 14px; font-weight: bold;">' +
+                                    'STEPS:<br>' +
+                                    '1️⃣ Click COPY LINK<br>' +
+                                    '2️⃣ Open new browser tab (Ctrl+T)<br>' +
+                                    '3️⃣ Paste link (Ctrl+V) and press Enter<br>' +
+                                    '4️⃣ Connect wallet there<br>' +
+                                    '5️⃣ Come back here when done!' +
                                 '</div>' +
                             '</div>';
                         }
