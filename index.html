@@ -72,21 +72,36 @@
             left: 20px;
             font-size: 14px;
             color: #00ffcc;
-            background: rgba(0,0,0,0.5);
-            padding: 10px 15px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 20px;
             border-radius: 10px;
             z-index: 100;
             pointer-events: auto;
+            min-width: 250px;
         }
         
         #userInfo button {
-            margin-left: 10px;
-            padding: 5px 10px;
+            margin: 5px;
+            padding: 8px 15px;
             background: #ff0088;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 12px;
+        }
+        
+        #userInfo .wallet-status {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-size: 12px;
+        }
+        
+        .link-wallet-btn {
+            background: linear-gradient(135deg, #f6851b, #e2761b) !important;
+            width: 100%;
+            margin-top: 10px !important;
         }
         
         #nameInput {
@@ -384,8 +399,24 @@
         </div>
         
         <div id="userInfo" style="display: none;">
-            👤 <span id="usernameDisplay">Not logged in</span>
-            <button onclick="logout()">Logout</button>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span>👤 <span id="usernameDisplay">Not logged in</span></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+            <div class="wallet-status">
+                <div id="walletNotLinkedInfo" style="display: block;">
+                    <span style="color: #ffd700;">💎 No wallet linked</span>
+                    <button class="link-wallet-btn" onclick="linkWalletToAccount()">
+                        Link NFT Wallet
+                    </button>
+                </div>
+                <div id="walletLinkedInfo" style="display: none;">
+                    <span style="color: #00ff88;">✅ Wallet linked</span>
+                    <div style="font-size: 10px; color: #888; margin-top: 5px;">
+                        <span id="linkedWalletDisplay"></span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div id="syncStatus">🔄 Checking...</div>
@@ -400,61 +431,14 @@
             <h1>🎮 SHACKER LOGIN</h1>
             
             <div id="loginForm" class="auth-form">
-                <!-- NFT Holders get leaderboard access -->
-                <button class="wallet-connect-btn" onclick="connectWithMetaMask()">
-                    💎 Connect Wallet (NFT Holders)
-                </button>
-                
-                <!-- OpenSea iframe solution -->
-                <div id="openSeaWalletOption" style="display: none; margin-top: 15px;">
-                    <div id="walletNotLinked">
-                        <p style="color: #ffd700; font-size: 14px;">🔒 On OpenSea? Link your wallet:</p>
-                        <button onclick="window.open('wallet-link-page.html', '_blank')" 
-                                class="btn" style="background: #f6851b; font-size: 16px; padding: 15px 30px;">
-                            🦊 Link Wallet (One Time Only)
-                        </button>
-                        <div style="margin-top: 15px;">
-                            <p style="color: #888; font-size: 12px;">Got your code? Enter it here:</p>
-                            <input type="text" id="linkCodeInput" placeholder="Enter 6-digit code" 
-                                   style="padding: 10px; margin: 10px 0; background: rgba(0,0,0,0.5); 
-                                          border: 2px solid #00ffcc; color: white; border-radius: 5px;
-                                          text-transform: uppercase; text-align: center; letter-spacing: 2px;"
-                                   maxlength="6">
-                            <button onclick="verifyLinkCode()" class="btn" style="display: block; margin: 10px auto; padding: 10px 20px;">
-                                ✅ Verify Code
-                            </button>
-                        </div>
-                    </div>
-                    <div id="walletAlreadyLinked" style="display: none;">
-                        <p style="color: #00ff88; font-size: 16px;">✅ Wallet already linked!</p>
-                        <button onclick="autoLoginWithWallet()" class="btn" style="background: #00ff88; color: black; margin-top: 10px;">
-                            🎮 Continue as NFT Holder
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Mobile wallet deep links for OpenSea -->
-                <div id="mobileWalletLinks" style="display: none; margin-top: 15px;">
-                    <p style="color: #888; font-size: 12px;">On mobile? Use these links:</p>
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <a href="metamask://dapp/shacker-game.vercel.app" class="btn" style="font-size: 14px; padding: 10px 20px;">
-                            🦊 MetaMask
-                        </a>
-                        <a href="trust://open_url?url=https://shacker-game.vercel.app" class="btn btn-secondary" style="font-size: 14px; padding: 10px 20px;">
-                            🛡️ Trust
-                        </a>
-                    </div>
-                </div>
-                
-                <div style="text-align: center; color: #ffd700; margin: 15px 0; font-size: 12px;">
-                    ⭐ NFT holders appear on the leaderboard
-                </div>
-                
-                <div class="wallet-or">OR</div>
-                
-                <!-- Free play without leaderboard -->
-                <div style="text-align: center; color: #888; margin-bottom: 10px; font-size: 14px;">
-                    Play for free (no leaderboard)
+                <!-- Simple login message -->
+                <div style="text-align: center; margin: 20px 0;">
+                    <p style="color: #ffd700; font-size: 16px; margin-bottom: 10px;">
+                        📧 Create an account to play
+                    </p>
+                    <p style="color: #888; font-size: 12px;">
+                        NFT holders: Link your wallet after login to appear on leaderboard
+                    </p>
                 </div>
                 
                 <input type="text" id="loginUsername" class="auth-input" placeholder="Username" maxlength="20">
@@ -618,37 +602,9 @@
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const isInIframe = window.parent !== window;
             
-            if (isInIframe) {
-                // Show OpenSea wallet solution
-                document.getElementById('openSeaWalletOption').style.display = 'block';
-                
-                // Check if wallet was previously linked
-                const walletLinked = storage.getItem('walletLinked');
-                const savedWallet = storage.getItem('walletAddress');
-                const savedToken = storage.getItem('shackerToken');
-                
-                if (walletLinked === 'true' && savedWallet && savedToken) {
-                    console.log('Found saved wallet connection:', savedWallet);
-                    // Show "already linked" UI
-                    document.getElementById('walletNotLinked').style.display = 'none';
-                    document.getElementById('walletAlreadyLinked').style.display = 'block';
-                    
-                    // Auto-login if valid token
-                    authToken = savedToken;
-                    currentUsername = storage.getItem('shackerUsername');
-                    
-                    // Try auto-login
-                    setTimeout(() => {
-                        if (authToken) {
-                            checkAuth();
-                        }
-                    }, 500);
-                }
-            }
+            // No special handling for iframes anymore - simple login for all
             
-            if (isMobile) {
-                document.getElementById('mobileWalletLinks').style.display = 'block';
-            }
+            // Mobile detection removed - not needed
             
             if (authToken && currentUsername) {
                 checkAuth();
@@ -798,15 +754,15 @@
         }
         
         function checkAuth() {
-            fetch(API_URL + '/can-play', {
+            fetch(API_URL + '/profile', {
                 headers: {
                     'Authorization': 'Bearer ' + authToken
                 }
             })
             .then(response => response.json())
             .then(data => {
-                if (data.canPlay !== undefined) {
-                    gamesLeft = data.gamesLeft;
+                if (data.username) {
+                    currentUsername = data.username;
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
                     document.getElementById('userInfo').style.display = 'block';
@@ -814,6 +770,19 @@
                     document.getElementById('welcomeUsername').textContent = currentUsername;
                     document.getElementById('nameInput').style.display = 'none';
                     document.getElementById('welcomeMessage').style.display = 'block';
+                    
+                    // Check if wallet is linked
+                    if (data.wallet_address) {
+                        storage.setItem('walletAddress', data.wallet_address);
+                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                        document.getElementById('walletLinkedInfo').style.display = 'block';
+                        document.getElementById('linkedWalletDisplay').textContent = 
+                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                        document.getElementById('walletBadge').classList.add('active');
+                        document.getElementById('walletAddressDisplay').textContent = 
+                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                    }
+                    
                     updateGamesLeftDisplay();
                     
                     if (!data.canPlay) {
@@ -1503,153 +1472,69 @@
             console.log('Running in iframe (OpenSea compatible with secure proxy)');
         }
         
-        // WALLET CONNECTION FUNCTIONS
-        async function connectWithMetaMask() {
-            document.getElementById('loginError').innerHTML = 
-                '<div style="color: #00ffcc;">🔄 Connecting wallet...</div>';
+        // Link wallet to existing account
+        async function linkWalletToAccount() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
             
             try {
-                let ethereum = window.ethereum;
-                
-                // Try multiple ways to access ethereum provider
-                if (!ethereum) {
-                    // Try parent window ethereum (sometimes available in iframes)
-                    if (window.parent && window.parent.ethereum) {
-                        ethereum = window.parent.ethereum;
-                    }
-                    // Try top window ethereum
-                    else if (window.top && window.top.ethereum) {
-                        ethereum = window.top.ethereum;
-                    }
-                    // Try global ethereum
-                    else if (window.ethereum) {
-                        ethereum = window.ethereum;
-                    }
-                }
-                
-                // Check if we found any ethereum provider
-                if (!ethereum) {
-                    document.getElementById('loginError').innerHTML = 
-                        '<div style="text-align: center;">' +
-                        '<p style="color: #ff4444;">No wallet detected!</p>' +
-                        '<p style="color: #ffd700; margin-top: 10px;">Try:</p>' +
-                        '1. Install MetaMask extension<br>' +
-                        '2. Or use email login below<br>' +
-                        '3. Or click button above to open in new tab' +
-                        '</div>';
+                // Check for wallet
+                if (!window.ethereum) {
+                    alert('No wallet detected! Please install MetaMask.');
                     return;
                 }
                 
-                // Request accounts using the found ethereum provider
-                const accounts = await ethereum.request({ 
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<span style="color: #00ffcc;">🔄 Connecting wallet...</span>';
+                
+                // Request accounts
+                const accounts = await window.ethereum.request({ 
                     method: 'eth_requestAccounts' 
                 });
                 
-                const address = accounts[0];
+                const wallet_address = accounts[0];
                 
-                // Get nonce from server
-                const nonceResponse = await fetch(API_URL + '/wallet/nonce', {
+                // Simply link wallet to current account
+                const linkResponse = await fetch(API_URL + '/wallet/link', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ wallet_address })
                 });
                 
-                if (!nonceResponse.ok) throw new Error('Failed to get nonce');
-                const { nonce } = await nonceResponse.json();
-                
-                // Create message to sign
-                const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
-                
-                // Request signature using the found ethereum provider
-                const signature = await ethereum.request({
-                    method: 'personal_sign',
-                    params: [message, address]
-                });
-                
-                // Verify with server
-                const verifyResponse = await fetch(API_URL + '/wallet/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address, signature, nonce })
-                });
-                
-                if (!verifyResponse.ok) {
-                    const errorData = await verifyResponse.json();
-                    
-                    // Special handling for NFT requirement
-                    if (errorData.error === 'NFT required') {
-                        document.getElementById('loginError').innerHTML = 
-                            errorData.message + '<br><br>' +
-                            '<a href="' + errorData.buyLink + '" target="_blank" style="color: #00ffcc;">🛒 Get your NFT on OpenSea</a>';
-                        throw new Error('NFT required');
-                    }
-                    
-                    throw new Error('Verification failed');
-                }
-                
-                const data = await verifyResponse.json();
+                const data = await linkResponse.json();
                 
                 if (data.success) {
-                    // Check if it's a new user (username starts with Player_)
-                    if (data.username && data.username.startsWith('Player_')) {
-                        // Ask for custom username
-                        const customUsername = prompt('🎮 Choose your username:', '');
-                        
-                        if (customUsername && customUsername.trim().length > 2) {
-                            // Update username on server
-                            try {
-                                const updateResponse = await fetch(API_URL + '/update-username', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': 'Bearer ' + data.token
-                                    },
-                                    body: JSON.stringify({ 
-                                        newUsername: customUsername.trim() 
-                                    })
-                                });
-                                
-                                if (updateResponse.ok) {
-                                    const updateData = await updateResponse.json();
-                                    data.username = updateData.username || customUsername.trim();
-                                }
-                            } catch (err) {
-                                console.error('Failed to update username:', err);
-                            }
-                        }
-                    }
+                    // Update UI to show wallet is linked
+                    storage.setItem('walletAddress', wallet_address);
                     
-                    // Store auth data
-                    authToken = data.token;
-                    currentUsername = data.username;
-                    gamesLeft = data.gamesLeft;
-                    
-                    storage.setItem('shackerToken', authToken);
-                    storage.setItem('shackerUsername', currentUsername);
-                    storage.setItem('walletAddress', address);
-                    
-                    // Update UI
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('userInfo').style.display = 'block';
-                    document.getElementById('usernameDisplay').textContent = currentUsername;
-                    document.getElementById('welcomeUsername').textContent = currentUsername;
-                    document.getElementById('nameInput').style.display = 'none';
-                    document.getElementById('welcomeMessage').style.display = 'block';
+                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                    document.getElementById('walletLinkedInfo').style.display = 'block';
+                    document.getElementById('linkedWalletDisplay').textContent = 
+                        wallet_address.slice(0, 6) + '...' + wallet_address.slice(-4);
                     
                     // Show wallet badge
                     document.getElementById('walletBadge').classList.add('active');
                     document.getElementById('walletAddressDisplay').textContent = 
-                        address.slice(0, 6) + '...' + address.slice(-4);
+                        wallet_address.slice(0, 6) + '...' + wallet_address.slice(-4);
                     
-                    updateGamesLeftDisplay();
+                    alert('✅ Wallet linked successfully! You will now appear on the NFT holders leaderboard.');
+                    
+                    // Reload scores to show on leaderboard
                     loadScores();
+                } else {
+                    throw new Error(data.error || 'Failed to link wallet');
                 }
                 
             } catch (error) {
-                console.error('MetaMask connection error:', error);
-                document.getElementById('loginError').textContent = 
-                    error.message || 'Failed to connect with MetaMask';
+                console.error('Wallet link error:', error);
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<span style="color: #ff4444;">❌ ' + error.message + '</span>' +
+                    '<button class="link-wallet-btn" onclick="linkWalletToAccount()">Try Again</button>';
             }
         }
         
@@ -1663,128 +1548,7 @@
             }
         });
         
-        // Auto-login with saved wallet
-        function autoLoginWithWallet() {
-            const savedToken = storage.getItem('shackerToken');
-            const savedUsername = storage.getItem('shackerUsername');
-            const savedWallet = storage.getItem('walletAddress');
-            
-            if (savedToken && savedUsername) {
-                authToken = savedToken;
-                currentUsername = savedUsername;
-                
-                // Skip login screen
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('startScreen').style.display = 'flex';
-                document.getElementById('userInfo').style.display = 'block';
-                document.getElementById('usernameDisplay').textContent = currentUsername;
-                document.getElementById('welcomeUsername').textContent = currentUsername;
-                document.getElementById('nameInput').style.display = 'none';
-                document.getElementById('welcomeMessage').style.display = 'block';
-                
-                // Show wallet badge
-                if (savedWallet) {
-                    document.getElementById('walletBadge').classList.add('active');
-                    document.getElementById('walletAddressDisplay').textContent = 
-                        savedWallet.slice(0, 6) + '...' + savedWallet.slice(-4);
-                }
-                
-                checkAuth();
-            }
-        }
-        
-        // Function to verify link code
-        async function verifyLinkCode() {
-            const code = document.getElementById('linkCodeInput').value.trim().toUpperCase();
-            
-            if (code.length !== 6) {
-                document.getElementById('loginError').textContent = 'Please enter a 6-digit code';
-                return;
-            }
-            
-            document.getElementById('loginError').innerHTML = 
-                '<div style="color: #00ffcc;">🔄 Verifying code...</div>';
-            
-            try {
-                const response = await fetch(API_URL + '/wallet/verify-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Store auth data
-                    authToken = data.token;
-                    currentUsername = data.username;
-                    gamesLeft = data.gamesLeft;
-                    
-                    storage.setItem('shackerToken', authToken);
-                    storage.setItem('shackerUsername', currentUsername);
-                    storage.setItem('walletAddress', data.wallet);
-                    
-                    // Check if new user needs username
-                    if (data.username && data.username.startsWith('Player_')) {
-                        const customUsername = prompt('🎮 Choose your username:', '');
-                        if (customUsername && customUsername.trim().length > 2) {
-                            try {
-                                const updateResponse = await fetch(API_URL + '/update-username', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': 'Bearer ' + data.token
-                                    },
-                                    body: JSON.stringify({ 
-                                        newUsername: customUsername.trim() 
-                                    })
-                                });
-                                
-                                if (updateResponse.ok) {
-                                    const updateData = await updateResponse.json();
-                                    currentUsername = updateData.username || customUsername.trim();
-                                }
-                            } catch (err) {
-                                console.error('Failed to update username:', err);
-                            }
-                        }
-                    }
-                    
-                    // Update UI
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('userInfo').style.display = 'block';
-                    document.getElementById('usernameDisplay').textContent = currentUsername;
-                    document.getElementById('welcomeUsername').textContent = currentUsername;
-                    document.getElementById('nameInput').style.display = 'none';
-                    document.getElementById('welcomeMessage').style.display = 'block';
-                    
-                    // Show wallet badge
-                    document.getElementById('walletBadge').classList.add('active');
-                    document.getElementById('walletAddressDisplay').textContent = 
-                        data.wallet.slice(0, 6) + '...' + data.wallet.slice(-4);
-                    
-                    updateGamesLeftDisplay();
-                    loadScores();
-                    
-                    // Save permanently for next time
-                    storage.setItem('walletLinked', 'true');
-                    storage.setItem('walletLinkDate', new Date().toISOString());
-                    
-                    document.getElementById('loginError').innerHTML = 
-                        '<div style="color: #00ff88;">✅ Wallet linked successfully! You won\'t need to do this again.</div>';
-                    
-                } else {
-                    document.getElementById('loginError').textContent = 
-                        data.error || 'Invalid or expired code';
-                }
-                
-            } catch (error) {
-                console.error('Code verification error:', error);
-                document.getElementById('loginError').textContent = 
-                    'Failed to verify code. Try again.';
-            }
-        }
+        // Removed old code verification functions - not needed anymore
         
         // Listen for account changes
         if (window.ethereum) {

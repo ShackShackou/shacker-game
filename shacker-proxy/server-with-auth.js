@@ -509,11 +509,22 @@ app.get('/profile', authenticateToken, async (req, res) => {
     try {
         const { data: user, error } = await supabase
             .from('users')
-            .select('username, email, created_at, total_games, best_score, games_today')
+            .select('username, email, created_at, total_games, best_score, games_today, wallet_address, has_nft')
             .eq('id', req.user.id)
             .single();
         
         if (error) throw error;
+        
+        // Check if can play today
+        const today = new Date().toDateString();
+        const lastGame = user.last_game_date ? new Date(user.last_game_date).toDateString() : '';
+        
+        if (today !== lastGame) {
+            user.games_today = 0;
+        }
+        
+        user.canPlay = user.games_today < DAILY_GAME_LIMIT;
+        user.gamesLeft = DAILY_GAME_LIMIT - user.games_today;
         
         res.json(user);
         
@@ -643,126 +654,7 @@ app.post('/wallet/link', authenticateToken, async (req, res) => {
     }
 });
 
-// Link wallet with code (for OpenSea iframe workaround)
-app.post('/wallet/link-with-code', async (req, res) => {
-    const { address, signature, nonce, linkCode } = req.body;
-    
-    if (!address || !signature || !nonce || !linkCode) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-    
-    try {
-        // Validate nonce
-        const nonceValid = await walletAuth.validateNonce(address, nonce);
-        if (!nonceValid) {
-            return res.status(401).json({ error: 'Invalid or expired nonce' });
-        }
-        
-        // Recreate and verify message
-        const message = `🎮 Link Wallet to Shacker Game\n\nLink Code: ${linkCode}\nWallet: ${address}\nNonce: ${nonce}\n\nSign to prove ownership`;
-        
-        const isValid = walletAuth.verifySignature(message, signature, address);
-        if (!isValid) {
-            return res.status(401).json({ error: 'Invalid signature' });
-        }
-        
-        // Store link code temporarily (expires in 10 minutes)
-        const { error: linkError } = await supabase
-            .from('wallet_nonces') // Reuse nonces table for codes
-            .upsert({
-                wallet_address: linkCode.toUpperCase(), // Use code as key
-                nonce: address.toLowerCase(), // Store wallet in nonce field
-                expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
-            });
-        
-        if (linkError) throw linkError;
-        
-        res.json({
-            success: true,
-            message: 'Wallet linked! Use code in game.',
-            code: linkCode
-        });
-        
-    } catch (error) {
-        console.error('Link with code error:', error);
-        res.status(500).json({ error: 'Failed to link wallet' });
-    }
-});
-
-// Verify link code and create session
-app.post('/wallet/verify-code', async (req, res) => {
-    const { code } = req.body;
-    
-    if (!code) {
-        return res.status(400).json({ error: 'Code required' });
-    }
-    
-    try {
-        // Get wallet from code
-        const { data: linkData, error: linkError } = await supabase
-            .from('wallet_nonces')
-            .select('*')
-            .eq('wallet_address', code.toUpperCase())
-            .gte('expires_at', new Date().toISOString())
-            .single();
-        
-        if (linkError || !linkData) {
-            return res.status(401).json({ error: 'Invalid or expired code' });
-        }
-        
-        const walletAddress = linkData.nonce; // We stored wallet in nonce field
-        
-        // Delete used code
-        await supabase
-            .from('wallet_nonces')
-            .delete()
-            .eq('wallet_address', code.toUpperCase());
-        
-        // Find or create user
-        const user = await walletAuth.findOrCreateUserByWallet(walletAddress);
-        
-        // Check NFT ownership
-        const NFT_CONTRACT = process.env.NFT_CONTRACT_ADDRESS;
-        let hasNFT = false;
-        
-        if (NFT_CONTRACT && NFT_CONTRACT !== '0x...') {
-            try {
-                hasNFT = await walletAuth.checkNFTOwnership(walletAddress, NFT_CONTRACT);
-            } catch (error) {
-                console.log('NFT check skipped');
-            }
-        }
-        
-        // Update NFT status
-        if (hasNFT) {
-            await supabase
-                .from('users')
-                .update({ has_nft: true })
-                .eq('id', user.id);
-        }
-        
-        // Create JWT token
-        const token = jwt.sign(
-            { id: user.id, username: user.username, wallet: walletAddress, hasNFT },
-            JWT_SECRET,
-            { expiresIn: '100y' }
-        );
-        
-        res.json({
-            success: true,
-            token,
-            username: user.username,
-            wallet: walletAddress,
-            hasNFT,
-            gamesLeft: 999,
-            leaderboardAccess: true
-        });
-        
-    } catch (error) {
-        console.error('Code verification error:', error);
-        res.status(500).json({ error: 'Verification failed' });
-    }
-});
+// Removed code-based wallet linking - using direct link instead
 
 // Check NFT ownership
 app.post('/wallet/check-nft', async (req, res) => {
