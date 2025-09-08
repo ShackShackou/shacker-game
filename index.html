@@ -790,14 +790,7 @@
                         document.getElementById('welcomeMessage').style.display = 'block';
                         updateGamesLeftDisplay();
                         
-                        // If user has NFT, prompt to link wallet
-                        if (wantsNFT) {
-                            setTimeout(() => {
-                                if (confirm('🦊 Would you like to link your wallet now to appear on the NFT leaderboard?')) {
-                                    linkWalletToAccount();
-                                }
-                            }, 500);
-                        }
+                        // Wallet linking is now handled via the profile panel
                     }, 1500);
                 } else {
                     document.getElementById('registerError').textContent = data.error || 'Registration failed';
@@ -1555,7 +1548,12 @@
         
         // Link wallet to existing account
         async function linkWalletToAccount() {
-            console.log('Link wallet clicked! AuthToken:', authToken);
+            console.log('=== WALLET LINK DEBUG ===');
+            console.log('1. AuthToken:', authToken);
+            console.log('2. Window.parent:', window.parent);
+            console.log('3. Window:', window);
+            console.log('4. Are they different?', window.parent !== window);
+            console.log('5. Location:', window.location.href);
             
             if (!authToken) {
                 alert('Please login first');
@@ -1564,9 +1562,15 @@
             
             // Check if in iframe (OpenSea)
             const isInIframe = window.parent !== window;
-            console.log('Is in iframe (OpenSea)?', isInIframe);
+            console.log('FINAL: Is in iframe?', isInIframe);
             
-            if (isInIframe) {
+            // ALWAYS use the new wallet system (works everywhere)
+            const useNewSystem = true; // Force new system for ALL cases
+            console.log('Using new wallet system: YES');
+            
+            // ALWAYS use the new system (it works everywhere including OpenSea)
+            if (useNewSystem) {
+                console.log('USING IFRAME/OPENSEA MODE!');
                 // On OpenSea - create a session for wallet linking
                 document.getElementById('walletNotLinkedInfo').innerHTML = 
                     '<div style="padding: 10px; background: rgba(246,133,27,0.2); border: 1px solid #f6851b; border-radius: 10px;">' +
