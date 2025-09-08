@@ -405,6 +405,15 @@
                     💎 Connect Wallet (NFT Holders)
                 </button>
                 
+                <!-- OpenSea iframe solution -->
+                <div id="openSeaWalletOption" style="display: none; margin-top: 15px;">
+                    <p style="color: #ffd700; font-size: 14px;">🔒 Wallet blocked in OpenSea?</p>
+                    <button onclick="window.open('https://shacker-game.vercel.app', '_blank')" 
+                            class="btn" style="background: #f6851b; font-size: 16px; padding: 15px 30px;">
+                        🦊 Open Game + Connect Wallet
+                    </button>
+                </div>
+                
                 <!-- Mobile wallet deep links for OpenSea -->
                 <div id="mobileWalletLinks" style="display: none; margin-top: 15px;">
                     <p style="color: #888; font-size: 12px;">On mobile? Use these links:</p>
@@ -590,7 +599,12 @@
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const isInIframe = window.parent !== window;
             
-            if (isMobile || isInIframe) {
+            if (isInIframe) {
+                // Show OpenSea wallet solution
+                document.getElementById('openSeaWalletOption').style.display = 'block';
+            }
+            
+            if (isMobile) {
                 document.getElementById('mobileWalletLinks').style.display = 'block';
             }
             
@@ -1449,31 +1463,43 @@
         
         // WALLET CONNECTION FUNCTIONS
         async function connectWithMetaMask() {
-            // Check if in iframe (OpenSea)
-            if (window.parent !== window) {
-                document.getElementById('loginError').innerHTML = 
-                    '<div style="text-align: center; color: #ffd700;">' +
-                    '🔒 Direct wallet connection not available in OpenSea<br><br>' +
-                    '<strong>To connect your wallet:</strong><br>' +
-                    '1. Use the mobile wallet links above<br>' +
-                    '2. Or use email login below<br>' +
-                    '3. Or open the game directly' +
-                    '</div>';
-                return;
-            }
-            
-            // Normal wallet connection outside of iframe
             document.getElementById('loginError').innerHTML = 
                 '<div style="color: #00ffcc;">🔄 Connecting wallet...</div>';
             
             try {
-                // Check for wallet
-                if (!window.ethereum) {
-                    throw new Error('No wallet detected');
+                let ethereum = window.ethereum;
+                
+                // Try multiple ways to access ethereum provider
+                if (!ethereum) {
+                    // Try parent window ethereum (sometimes available in iframes)
+                    if (window.parent && window.parent.ethereum) {
+                        ethereum = window.parent.ethereum;
+                    }
+                    // Try top window ethereum
+                    else if (window.top && window.top.ethereum) {
+                        ethereum = window.top.ethereum;
+                    }
+                    // Try global ethereum
+                    else if (window.ethereum) {
+                        ethereum = window.ethereum;
+                    }
                 }
                 
-                // Request accounts
-                const accounts = await window.ethereum.request({ 
+                // Check if we found any ethereum provider
+                if (!ethereum) {
+                    document.getElementById('loginError').innerHTML = 
+                        '<div style="text-align: center;">' +
+                        '<p style="color: #ff4444;">No wallet detected!</p>' +
+                        '<p style="color: #ffd700; margin-top: 10px;">Try:</p>' +
+                        '1. Install MetaMask extension<br>' +
+                        '2. Or use email login below<br>' +
+                        '3. Or click button above to open in new tab' +
+                        '</div>';
+                    return;
+                }
+                
+                // Request accounts using the found ethereum provider
+                const accounts = await ethereum.request({ 
                     method: 'eth_requestAccounts' 
                 });
                 
@@ -1492,8 +1518,8 @@
                 // Create message to sign
                 const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
                 
-                // Request signature
-                const signature = await window.ethereum.request({
+                // Request signature using the found ethereum provider
+                const signature = await ethereum.request({
                     method: 'personal_sign',
                     params: [message, address]
                 });
@@ -1608,5 +1634,26 @@
     </script>
     
     <!-- Simplified wallet connection for OpenSea -->
+    <script>
+    // Try to inject ethereum from OpenSea if available
+    if (window.parent !== window) {
+        console.log('Trying to access OpenSea wallet...');
+        
+        // Listen for ethereum provider from parent
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'ethereum_provider') {
+                window.ethereum = e.data.ethereum;
+                console.log('Received ethereum provider from parent!');
+            }
+        });
+        
+        // Request ethereum from parent
+        try {
+            window.parent.postMessage({ type: 'request_ethereum' }, '*');
+        } catch(e) {
+            console.log('Cannot communicate with parent:', e);
+        }
+    }
+    </script>
 </body>
 </html>
