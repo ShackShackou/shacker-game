@@ -150,10 +150,24 @@
                     throw new Error('MetaMask not installed! Please install MetaMask extension.');
                 }
                 
-                // Request accounts
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_requestAccounts' 
-                });
+                // Add delay to avoid conflicts
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Request accounts (with error handling for pending requests)
+                let accounts;
+                try {
+                    accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                } catch (err) {
+                    if (err.message && err.message.includes('already pending')) {
+                        statusDiv.className = 'status error';
+                        statusDiv.innerHTML = '⚠️ Please check MetaMask for pending request';
+                        connectBtn.disabled = false;
+                        return;
+                    }
+                    throw err;
+                }
                 
                 const walletAddress = accounts[0];
                 statusDiv.innerHTML = '<div class="spinner"></div>📝 Please sign the message...';

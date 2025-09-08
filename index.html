@@ -1625,12 +1625,7 @@
         
         // Link wallet to existing account
         async function linkWalletToAccount() {
-            console.log('=== WALLET LINK DEBUG ===');
-            console.log('1. AuthToken:', authToken);
-            console.log('2. Window.parent:', window.parent);
-            console.log('3. Window:', window);
-            console.log('4. Are they different?', window.parent !== window);
-            console.log('5. Location:', window.location.href);
+            console.log('=== WALLET LINK START ===');
             
             if (!authToken) {
                 alert('Please login first');
@@ -1639,14 +1634,10 @@
             
             // Check if in iframe (OpenSea)
             const isInIframe = window.parent !== window;
-            console.log('FINAL: Is in iframe?', isInIframe);
+            console.log('Is in iframe (OpenSea)?', isInIframe);
             
-            // ALWAYS use the new wallet system (works everywhere)
-            const useNewSystem = true; // Force new system for ALL cases
-            console.log('Using new wallet system: YES');
-            
-            // ALWAYS use the new system (it works everywhere including OpenSea)
-            if (useNewSystem) {
+            // Use session-based system ONLY for OpenSea iframe
+            if (isInIframe) {
                 console.log('USING IFRAME/OPENSEA MODE!');
                 // On OpenSea - create a session for wallet linking
                 document.getElementById('walletNotLinkedInfo').innerHTML = 
@@ -1669,11 +1660,30 @@
                         const sessionId = data.sessionId;
                         const linkUrl = data.linkUrl;
                         
-                        // Show the link
-                        document.getElementById('walletNotLinkedInfo').innerHTML = 
+                        // Try to auto-open the wallet link page
+                        const newWindow = window.open(linkUrl, '_blank');
+                        
+                        // Update UI based on whether window opened
+                        if (newWindow) {
+                            // Window opened successfully
+                            document.getElementById('walletNotLinkedInfo').innerHTML = 
                             '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px;">' +
-                                '<div style="color: #00ffcc; font-size: 18px; font-weight: bold; margin-bottom: 15px;">' +
-                                    '🦊 Click to Connect Your Wallet' +
+                                '<div style="color: #00ffcc; font-size: 16px; margin-bottom: 10px;">' +
+                                    '🦊 Wallet connection in progress...' +
+                                '</div>' +
+                                '<div style="color: #ffd700;">' +
+                                    '⏳ Please complete the connection in the new tab' +
+                                '</div>' +
+                                '<div style="color: #aaa; margin-top: 10px; font-size: 12px;">' +
+                                    'Window opened automatically. If blocked, <a href="' + linkUrl + '" target="_blank" style="color: #f6851b;">click here</a>' +
+                                '</div>' +
+                            '</div>';
+                        } else {
+                            // Popup blocked - show manual link
+                            document.getElementById('walletNotLinkedInfo').innerHTML = 
+                            '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px;">' +
+                                '<div style="color: #ffd700; font-size: 16px; margin-bottom: 15px;">' +
+                                    '⚠️ Popup blocked! Click below to connect:' +
                                 '</div>' +
                                 '<a href="' + linkUrl + '" target="_blank" style="' +
                                     'display: inline-block;' +
@@ -1693,6 +1703,7 @@
                                     '✅ Returns here when done' +
                                 '</div>' +
                             '</div>';
+                        }
                         
                         // Start polling for completion
                         const pollInterval = setInterval(() => {
@@ -1718,7 +1729,7 @@
                             .catch(error => {
                                 console.log('Poll error:', error);
                             });
-                        }, 2000); // Check every 2 seconds
+                        }, 1500); // Check every 1.5 seconds
                         
                         // Stop polling after 10 minutes
                         setTimeout(() => clearInterval(pollInterval), 600000);
@@ -1817,9 +1828,22 @@
                 
             } catch (error) {
                 console.error('Wallet link error:', error);
+                
+                // Check for specific error types
+                let errorMsg = 'Connection failed';
+                if (error.message && error.message.includes('already pending')) {
+                    errorMsg = 'Please check MetaMask for pending request';
+                } else if (error.code === 4001) {
+                    errorMsg = 'Connection cancelled by user';
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                
                 document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #ff4444;">❌ ' + error.message + '</span>' +
-                    '<button class="link-wallet-btn" onclick="linkWalletToAccount()">Try Again</button>';
+                    '<div>' +
+                        '<span style="color: #ff4444;">❌ ' + errorMsg + '</span><br>' +
+                        '<button class="link-wallet-btn" onclick="linkWalletToAccount()" style="margin-top: 10px;">Try Again</button>' +
+                    '</div>';
             }
         }
         
