@@ -1508,6 +1508,16 @@
             console.log('Running in iframe (OpenSea compatible with secure proxy)');
         }
         
+        // Generate random 6-character code
+        function generateLinkCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+        
         // Link wallet to existing account
         async function linkWalletToAccount() {
             console.log('Link wallet clicked! AuthToken:', authToken);
@@ -1522,14 +1532,42 @@
             console.log('Is in iframe (OpenSea)?', isInIframe);
             
             if (isInIframe) {
-                // On OpenSea - show direct link instead of popup (popups are blocked)
-                const linkUrl = `https://shacker-game.vercel.app/wallet-link.html?token=${authToken}&username=${currentUsername}`;
+                // On OpenSea - generate a temporary code
+                const code = generateLinkCode();
+                const linkUrl = `https://shacker-game.vercel.app/wallet-link-code.html?code=${code}`;
                 
-                // Create both a clickable link AND a copy button
+                // Request code from server
+                fetch(API_URL + '/wallet/create-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ code })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Code created:', data);
+                })
+                .catch(error => {
+                    console.error('Code creation error:', error);
+                });
+                
+                // Show code and link
                 document.getElementById('walletNotLinkedInfo').innerHTML = `
-                    <div style="padding: 10px; background: rgba(246,133,27,0.2); border: 1px solid #f6851b; border-radius: 10px; margin: 10px 0;">
-                        <div style="color: #ffd700; margin-bottom: 10px; font-size: 14px;">
-                            🦊 To link your wallet on OpenSea:
+                    <div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px; margin: 10px 0;">
+                        <div style="color: #ffd700; margin-bottom: 15px; font-size: 16px; font-weight: bold;">
+                            🦊 Link Your Wallet - Code Method
+                        </div>
+                        <div style="background: #000; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                            <div style="color: #00ffcc; font-size: 12px; margin-bottom: 5px;">Your temporary code:</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #00ff88; letter-spacing: 8px; font-family: monospace;">
+                                ${code}
+                            </div>
+                        </div>
+                        <div style="color: #fff; margin: 15px 0; font-size: 14px;">
+                            1️⃣ Copy this code: <strong>${code}</strong><br>
+                            2️⃣ Open this link in a new tab:<br>
                         </div>
                         <div style="margin: 10px 0;">
                             <a href="${linkUrl}" target="_blank" style="

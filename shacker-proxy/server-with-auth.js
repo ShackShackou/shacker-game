@@ -691,6 +691,105 @@ app.post('/wallet/check-nft', async (req, res) => {
     }
 });
 
+// Store temporary codes (in production, use Redis or database)
+const tempCodes = new Map();
+
+// Create temporary code for wallet linking
+app.post('/wallet/create-code', authenticateToken, async (req, res) => {
+    const { code } = req.body;
+    
+    if (!code || code.length !== 6) {
+        return res.status(400).json({ error: 'Invalid code format' });
+    }
+    
+    // Store code with user info (expires in 10 minutes)
+    tempCodes.set(code, {
+        userId: req.user.id,
+        username: req.user.username,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+    });
+    
+    // Clean expired codes
+    for (const [key, value] of tempCodes.entries()) {
+        if (Date.now() > value.expiresAt) {
+            tempCodes.delete(key);
+        }
+    }
+    
+    res.json({ success: true, code, expiresIn: 600 });
+});
+
+// Verify code
+app.post('/wallet/verify-code', async (req, res) => {
+    const { code } = req.body;
+    
+    if (!code || code.length !== 6) {
+        return res.status(400).json({ valid: false, error: 'Invalid code format' });
+    }
+    
+    const codeData = tempCodes.get(code);
+    
+    if (!codeData || Date.now() > codeData.expiresAt) {
+        return res.status(404).json({ valid: false, error: 'Code expired or not found' });
+    }
+    
+    res.json({ 
+        valid: true, 
+        username: codeData.username,
+        userId: codeData.userId 
+    });
+});
+
+// Link wallet with code
+app.post('/wallet/link-with-code', async (req, res) => {
+    const { code, wallet_address, signature, message } = req.body;
+    
+    if (!code || !wallet_address || !signature || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Verify code
+    const codeData = tempCodes.get(code);
+    if (!codeData || Date.now() > codeData.expiresAt) {
+        return res.status(404).json({ error: 'Code expired or not found' });
+    }
+    
+    try {
+        // Verify signature
+        const { ethers } = require('ethers');
+        const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+        
+        if (recoveredAddress.toLowerCase() !== wallet_address.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        // Update user with wallet
+        const { data: updatedUser, error } = await supabase
+            .from('users')
+            .update({ wallet_address })
+            .eq('id', codeData.userId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        // Remove used code
+        tempCodes.delete(code);
+        
+        res.json({
+            success: true,
+            message: 'Wallet linked successfully',
+            wallet: wallet_address,
+            username: codeData.username
+        });
+        
+    } catch (error) {
+        console.error('Wallet linking error:', error);
+        res.status(500).json({ error: error.message || 'Failed to link wallet' });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Shacker Auth Server v2.1 FIXED running on port ${PORT}`);

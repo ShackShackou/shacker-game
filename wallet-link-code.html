@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Your Wallet - Shacker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #00ffcc;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .code-input {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #00ffcc;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 24px;
+            text-align: center;
+            width: 100%;
+            margin: 20px 0;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+        .code-input::placeholder {
+            color: #888;
+            letter-spacing: normal;
+            text-transform: none;
+        }
+        .btn {
+            background: linear-gradient(135deg, #f6851b, #e2761b);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        .status.show { display: block; }
+        .status.success {
+            background: rgba(0,255,136,0.2);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+        .status.error {
+            background: rgba(255,68,68,0.2);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+        .status.info {
+            background: rgba(0,255,204,0.2);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+        }
+        .instructions {
+            background: rgba(246,133,27,0.1);
+            border: 1px solid #f6851b;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            text-align: left;
+            color: #ccc;
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Link Your Wallet to Shacker</h1>
+        
+        <div class="instructions">
+            <h3>📝 Instructions:</h3>
+            <ol>
+                <li>Go back to the game on OpenSea</li>
+                <li>Click "Link NFT Wallet"</li>
+                <li>A 6-digit code will appear</li>
+                <li>Enter that code below</li>
+            </ol>
+        </div>
+        
+        <input type="text" 
+               id="codeInput" 
+               class="code-input" 
+               placeholder="Enter 6-digit code" 
+               maxlength="6"
+               pattern="[A-Z0-9]{6}">
+        
+        <button class="btn" onclick="verifyCode()" id="verifyBtn">
+            Verify Code & Connect Wallet
+        </button>
+        
+        <div id="status" class="status"></div>
+    </div>
+    
+    <script>
+        const statusDiv = document.getElementById('status');
+        const codeInput = document.getElementById('codeInput');
+        const verifyBtn = document.getElementById('verifyBtn');
+        
+        // Auto uppercase
+        codeInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+        
+        async function verifyCode() {
+            const code = codeInput.value.trim();
+            
+            if (code.length !== 6) {
+                showStatus('Please enter a valid 6-digit code', 'error');
+                return;
+            }
+            
+            verifyBtn.disabled = true;
+            showStatus('🔄 Verifying code...', 'info');
+            
+            try {
+                // Step 1: Verify code with server
+                const verifyResponse = await fetch('https://shacker-proxy.onrender.com/wallet/verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const verifyData = await verifyResponse.json();
+                
+                if (!verifyData.valid) {
+                    throw new Error('Invalid or expired code. Please get a new code from the game.');
+                }
+                
+                showStatus('✅ Code verified! Connecting wallet...', 'success');
+                
+                // Step 2: Connect MetaMask
+                if (!window.ethereum) {
+                    throw new Error('MetaMask not detected! Please install MetaMask.');
+                }
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                const wallet_address = accounts[0];
+                showStatus('🦊 Wallet connected! Signing message...', 'info');
+                
+                // Step 3: Create and sign message
+                const timestamp = new Date().toISOString();
+                const message = `Link wallet to Shacker account: ${verifyData.username}\nWallet: ${wallet_address}\nCode: ${code}\nTimestamp: ${timestamp}`;
+                
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, wallet_address]
+                });
+                
+                showStatus('📝 Message signed! Linking wallet...', 'info');
+                
+                // Step 4: Link wallet with code
+                const linkResponse = await fetch('https://shacker-proxy.onrender.com/wallet/link-with-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        code,
+                        wallet_address,
+                        signature,
+                        message
+                    })
+                });
+                
+                const linkData = await linkResponse.json();
+                
+                if (linkData.success) {
+                    showStatus('🎉 SUCCESS! Your wallet is now linked!', 'success');
+                    
+                    // Store in localStorage for the game
+                    localStorage.setItem('walletLinked', 'true');
+                    localStorage.setItem('walletAddress', wallet_address);
+                    
+                    setTimeout(() => {
+                        statusDiv.innerHTML += '<br><br>✅ You can now close this window and refresh the game on OpenSea!';
+                    }, 1000);
+                } else {
+                    throw new Error(linkData.error || 'Failed to link wallet');
+                }
+                
+            } catch (error) {
+                showStatus('❌ ' + error.message, 'error');
+                verifyBtn.disabled = false;
+            }
+        }
+        
+        function showStatus(message, type) {
+            statusDiv.className = 'status show ' + type;
+            statusDiv.textContent = message;
+        }
+        
+        // Check URL params for direct code
+        const urlParams = new URLSearchParams(window.location.search);
+        const directCode = urlParams.get('code');
+        if (directCode) {
+            codeInput.value = directCode;
+            showStatus('Code pre-filled! Click the button to connect your wallet.', 'info');
+        }
+    </script>
+</body>
+</html>
