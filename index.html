@@ -470,10 +470,9 @@
         <!-- START SCREEN -->
         <div id="startScreen">
             <h1>SHACKER</h1>
-            <div id="welcomeMessage" style="color: #ffd700; font-size: 24px; margin-bottom: 20px; display: none;">
+            <div id="welcomeMessage" style="color: #ffd700; font-size: 24px; margin-bottom: 20px;">
                 Welcome, <span id="welcomeUsername"></span>!
             </div>
-            <input type="text" id="nameInput" placeholder="Enter your name" maxlength="20" style="display: block;">
             <button class="btn" id="startBtn" onclick="startGame()">START GAME</button>
             <button class="btn" id="viewScoresBtn" onclick="viewScores()" style="background: linear-gradient(135deg, #ffd700, #ffa500);">🏆 VIEW SCORES</button>
         </div>
@@ -679,6 +678,7 @@
                     document.getElementById('userInfo').style.display = 'block';
                     document.getElementById('usernameDisplay').textContent = currentUsername;
                     document.getElementById('welcomeUsername').textContent = currentUsername;
+                    document.getElementById('welcomeMessage').style.display = 'block';
                     updateGamesLeftDisplay();
                     
                     loadScores();
@@ -738,7 +738,6 @@
                         document.getElementById('userInfo').style.display = 'block';
                         document.getElementById('usernameDisplay').textContent = currentUsername;
                         document.getElementById('welcomeUsername').textContent = currentUsername;
-                        document.getElementById('nameInput').style.display = 'none';
                         document.getElementById('welcomeMessage').style.display = 'block';
                         updateGamesLeftDisplay();
                     }, 1500);
@@ -768,7 +767,6 @@
                     document.getElementById('userInfo').style.display = 'block';
                     document.getElementById('usernameDisplay').textContent = currentUsername;
                     document.getElementById('welcomeUsername').textContent = currentUsername;
-                    document.getElementById('nameInput').style.display = 'none';
                     document.getElementById('welcomeMessage').style.display = 'block';
                     
                     // Check if wallet is linked
@@ -821,12 +819,8 @@
             
             console.log('Starting game...');
             
-            // Use currentUsername when authenticated, otherwise get from input
-            if (authToken && currentUsername) {
-                playerName = currentUsername;
-            } else {
-                playerName = document.getElementById('nameInput').value || 'Player';
-            }
+            // Always use currentUsername when authenticated
+            playerName = currentUsername || 'Player';
             
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
@@ -1118,13 +1112,14 @@
             
             // Check if user has wallet/NFT for leaderboard
             var hasWallet = storage.getItem('walletAddress');
-            if (!hasWallet) {
-                // Show message for non-NFT holders
+            if (!hasWallet && authToken) {
+                // Show link wallet button for logged-in users without wallet
                 document.getElementById('finalScore').innerHTML = 
                     'Score: ' + score + '<br>' +
-                    '<div style="color: #ffd700; font-size: 16px; margin-top: 10px;">' +
-                    '🔒 Get an NFT to appear on the leaderboard!<br>' +
-                    '<a href="https://opensea.io/collection/your-collection" target="_blank" style="color: #00ffcc;">Get your NFT →</a>' +
+                    '<div style="background: rgba(255,215,0,0.1); border: 2px solid #ffd700; padding: 15px; border-radius: 10px; margin-top: 20px;">' +
+                    '<p style="color: #ffd700; font-size: 18px; margin-bottom: 10px;">💎 Want to appear on the leaderboard?</p>' +
+                    '<p style="color: #888; font-size: 14px; margin-bottom: 15px;">Link your NFT wallet to compete!</p>' +
+                    '<button onclick="linkWalletToAccount()" class="btn" style="background: linear-gradient(135deg, #f6851b, #e2761b); font-size: 16px;">Link Wallet Now</button>' +
                     '</div>';
             }
             
@@ -1487,7 +1482,7 @@
                 }
                 
                 document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #00ffcc;">🔄 Connecting wallet...</span>';
+                    '<span style="color: #00ffcc;">🔄 Requesting wallet access...</span>';
                 
                 // Request accounts
                 const accounts = await window.ethereum.request({ 
@@ -1496,7 +1491,10 @@
                 
                 const wallet_address = accounts[0];
                 
-                // Simply link wallet to current account
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<span style="color: #00ffcc;">🔄 Linking wallet to your account...</span>';
+                
+                // Simply link wallet to current account - NO SIGNATURE NEEDED
                 const linkResponse = await fetch(API_URL + '/wallet/link', {
                     method: 'POST',
                     headers: {
