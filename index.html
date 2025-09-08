@@ -1449,31 +1449,35 @@
         
         // WALLET CONNECTION FUNCTIONS
         async function connectWithMetaMask() {
-            // Use WalletConnect which works in iframes!
+            // Check if in iframe (OpenSea)
+            if (window.parent !== window) {
+                document.getElementById('loginError').innerHTML = 
+                    '<div style="text-align: center; color: #ffd700;">' +
+                    '🔒 Direct wallet connection not available in OpenSea<br><br>' +
+                    '<strong>To connect your wallet:</strong><br>' +
+                    '1. Use the mobile wallet links above<br>' +
+                    '2. Or use email login below<br>' +
+                    '3. Or open the game directly' +
+                    '</div>';
+                return;
+            }
+            
+            // Normal wallet connection outside of iframe
             document.getElementById('loginError').innerHTML = 
                 '<div style="color: #00ffcc;">🔄 Connecting wallet...</div>';
             
             try {
-                let provider;
-                let address;
-                
-                // Try WalletConnect first (works in OpenSea iframes)
-                if (window.WalletConnectHelper) {
-                    const result = await window.WalletConnectHelper.connectWallet();
-                    if (result.success) {
-                        provider = result.provider;
-                        address = result.address;
-                    }
-                } else if (window.ethereum) {
-                    // Fallback to direct connection
-                    const accounts = await window.ethereum.request({ 
-                        method: 'eth_requestAccounts' 
-                    });
-                    provider = window.ethereum;
-                    address = accounts[0];
-                } else {
-                    throw new Error('No wallet available');
+                // Check for wallet
+                if (!window.ethereum) {
+                    throw new Error('No wallet detected');
                 }
+                
+                // Request accounts
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                const address = accounts[0];
                 
                 // Get nonce from server
                 const nonceResponse = await fetch(API_URL + '/wallet/nonce', {
@@ -1488,8 +1492,8 @@
                 // Create message to sign
                 const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
                 
-                // Request signature using the appropriate provider
-                const signature = await provider.request({
+                // Request signature
+                const signature = await window.ethereum.request({
                     method: 'personal_sign',
                     params: [message, address]
                 });
@@ -1603,53 +1607,6 @@
         }
     </script>
     
-    <!-- WalletConnect Integration -->
-    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-    <script>
-    // Enhanced WalletConnect for OpenSea compatibility
-    window.WalletConnectHelper = {
-        provider: null,
-        
-        async connectWallet() {
-            try {
-                // Try WalletConnect first (works in iframes)
-                const provider = new WalletConnectProvider.default({
-                    infuraId: "9aa3d95b3bc440fa88ea12eaa4456161",
-                    rpc: {
-                        1: "https://eth-mainnet.public.blastapi.io"
-                    }
-                });
-                
-                // Enable session
-                await provider.enable();
-                this.provider = provider;
-                
-                const accounts = await provider.request({ 
-                    method: 'eth_accounts' 
-                });
-                
-                return {
-                    success: true,
-                    address: accounts[0],
-                    provider: provider
-                };
-                
-            } catch (error) {
-                // Fallback to direct MetaMask if available
-                if (window.ethereum) {
-                    const accounts = await window.ethereum.request({ 
-                        method: 'eth_requestAccounts' 
-                    });
-                    return {
-                        success: true,
-                        address: accounts[0],
-                        provider: window.ethereum
-                    };
-                }
-                throw error;
-            }
-        }
-    };
-    </script>
+    <!-- Simplified wallet connection for OpenSea -->
 </body>
 </html>

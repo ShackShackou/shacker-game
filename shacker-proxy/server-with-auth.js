@@ -572,13 +572,18 @@ app.post('/wallet/verify', async (req, res) => {
         }
         
         // Check NFT ownership (optional for leaderboard access)
-        const NFT_CONTRACT = process.env.NFT_CONTRACT_ADDRESS || '0x...'; // Your NFT contract
+        const NFT_CONTRACT = process.env.NFT_CONTRACT_ADDRESS;
         let hasNFT = false;
         
-        try {
-            hasNFT = await walletAuth.checkNFTOwnership(address, NFT_CONTRACT);
-        } catch (error) {
-            console.log('NFT check failed, continuing without NFT status');
+        // Only check NFT if contract address is configured
+        if (NFT_CONTRACT && NFT_CONTRACT !== '0x...') {
+            try {
+                hasNFT = await walletAuth.checkNFTOwnership(address, NFT_CONTRACT);
+            } catch (error) {
+                console.log('NFT check skipped - no valid contract configured');
+            }
+        } else {
+            console.log('NFT verification disabled - no contract address set');
         }
         
         // Find or create user
