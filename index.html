@@ -407,11 +407,22 @@
                 
                 <!-- OpenSea iframe solution -->
                 <div id="openSeaWalletOption" style="display: none; margin-top: 15px;">
-                    <p style="color: #ffd700; font-size: 14px;">🔒 Wallet blocked in OpenSea?</p>
-                    <button onclick="window.open('https://shacker-game.vercel.app', '_blank')" 
+                    <p style="color: #ffd700; font-size: 14px;">🔒 On OpenSea? Link your wallet:</p>
+                    <button onclick="window.open('wallet-link-page.html', '_blank')" 
                             class="btn" style="background: #f6851b; font-size: 16px; padding: 15px 30px;">
-                        🦊 Open Game + Connect Wallet
+                        🦊 Link Wallet (Opens New Tab)
                     </button>
+                    <div style="margin-top: 15px;">
+                        <p style="color: #888; font-size: 12px;">Already linked? Enter your code:</p>
+                        <input type="text" id="linkCodeInput" placeholder="Enter 6-digit code" 
+                               style="padding: 10px; margin: 10px 0; background: rgba(0,0,0,0.5); 
+                                      border: 2px solid #00ffcc; color: white; border-radius: 5px;
+                                      text-transform: uppercase; text-align: center; letter-spacing: 2px;"
+                               maxlength="6">
+                        <button onclick="verifyLinkCode()" class="btn" style="display: block; margin: 10px auto; padding: 10px 20px;">
+                            ✅ Verify Code
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Mobile wallet deep links for OpenSea -->
@@ -1620,6 +1631,95 @@
                     walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
             }
         });
+        
+        // Function to verify link code
+        async function verifyLinkCode() {
+            const code = document.getElementById('linkCodeInput').value.trim().toUpperCase();
+            
+            if (code.length !== 6) {
+                document.getElementById('loginError').textContent = 'Please enter a 6-digit code';
+                return;
+            }
+            
+            document.getElementById('loginError').innerHTML = 
+                '<div style="color: #00ffcc;">🔄 Verifying code...</div>';
+            
+            try {
+                const response = await fetch(API_URL + '/wallet/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store auth data
+                    authToken = data.token;
+                    currentUsername = data.username;
+                    gamesLeft = data.gamesLeft;
+                    
+                    storage.setItem('shackerToken', authToken);
+                    storage.setItem('shackerUsername', currentUsername);
+                    storage.setItem('walletAddress', data.wallet);
+                    
+                    // Check if new user needs username
+                    if (data.username && data.username.startsWith('Player_')) {
+                        const customUsername = prompt('🎮 Choose your username:', '');
+                        if (customUsername && customUsername.trim().length > 2) {
+                            try {
+                                const updateResponse = await fetch(API_URL + '/update-username', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': 'Bearer ' + data.token
+                                    },
+                                    body: JSON.stringify({ 
+                                        newUsername: customUsername.trim() 
+                                    })
+                                });
+                                
+                                if (updateResponse.ok) {
+                                    const updateData = await updateResponse.json();
+                                    currentUsername = updateData.username || customUsername.trim();
+                                }
+                            } catch (err) {
+                                console.error('Failed to update username:', err);
+                            }
+                        }
+                    }
+                    
+                    // Update UI
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'flex';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('usernameDisplay').textContent = currentUsername;
+                    document.getElementById('welcomeUsername').textContent = currentUsername;
+                    document.getElementById('nameInput').style.display = 'none';
+                    document.getElementById('welcomeMessage').style.display = 'block';
+                    
+                    // Show wallet badge
+                    document.getElementById('walletBadge').classList.add('active');
+                    document.getElementById('walletAddressDisplay').textContent = 
+                        data.wallet.slice(0, 6) + '...' + data.wallet.slice(-4);
+                    
+                    updateGamesLeftDisplay();
+                    loadScores();
+                    
+                    document.getElementById('loginError').innerHTML = 
+                        '<div style="color: #00ff88;">✅ Wallet linked successfully!</div>';
+                    
+                } else {
+                    document.getElementById('loginError').textContent = 
+                        data.error || 'Invalid or expired code';
+                }
+                
+            } catch (error) {
+                console.error('Code verification error:', error);
+                document.getElementById('loginError').textContent = 
+                    'Failed to verify code. Try again.';
+            }
+        }
         
         // Listen for account changes
         if (window.ethereum) {

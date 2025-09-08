@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Your NFT Wallet - Shacker Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        h1 {
+            color: #00ffcc;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0,255,204,0.5);
+        }
+        
+        .info-box {
+            background: rgba(255,215,0,0.1);
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .info-box h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-btn {
+            background: linear-gradient(135deg, #f6851b, #e2761b);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .wallet-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(246,133,27,0.4);
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .status.success {
+            background: rgba(0,255,136,0.2);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            display: block;
+        }
+        
+        .status.error {
+            background: rgba(255,68,68,0.2);
+            border: 2px solid #ff4444;
+            color: #ff4444;
+            display: block;
+        }
+        
+        .wallet-address {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            color: #00ffcc;
+        }
+        
+        .back-btn {
+            background: rgba(102,126,234,0.3);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(102,126,234,0.5);
+        }
+        
+        #linkCode {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #00ffcc;
+            color: #00ffcc;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-family: monospace;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Link Your NFT Wallet</h1>
+        
+        <div class="info-box">
+            <h3>⭐ Why Link Your Wallet?</h3>
+            <p>• Appear on the NFT Holders Leaderboard</p>
+            <p>• Compete with other NFT holders</p>
+            <p>• Prove your NFT ownership</p>
+            <p>• Get unlimited daily games</p>
+        </div>
+        
+        <div id="step1">
+            <p style="color: #888; margin-bottom: 20px;">Your unique link code:</p>
+            <div id="linkCode">Loading...</div>
+            <p style="color: #ffd700; margin: 20px 0;">Remember this code!</p>
+            
+            <button class="wallet-btn" onclick="connectWallet()">
+                🦊 Connect MetaMask
+            </button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div id="step2" style="display: none;">
+            <h2 style="color: #00ff88; margin: 20px 0;">✅ Wallet Connected!</h2>
+            <div class="wallet-address" id="walletDisplay"></div>
+            <p style="color: #ffd700; margin: 20px 0;">
+                Now go back to the game and enter your code:<br>
+                <strong id="codeDisplay" style="font-size: 24px;"></strong>
+            </p>
+            <a href="https://shacker-game.vercel.app" class="wallet-btn">
+                🎮 Back to Game
+            </a>
+        </div>
+        
+        <a href="https://shacker-game.vercel.app" class="back-btn">← Back to Game</a>
+    </div>
+    
+    <script>
+        // Generate unique link code
+        const linkCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+        document.getElementById('linkCode').textContent = linkCode;
+        
+        // Store in localStorage
+        localStorage.setItem('shackerLinkCode', linkCode);
+        
+        async function connectWallet() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                // Check for MetaMask
+                if (!window.ethereum) {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '❌ No wallet detected! Please install MetaMask.';
+                    return;
+                }
+                
+                statusDiv.className = 'status';
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '🔄 Connecting to wallet...';
+                
+                // Request accounts
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                const address = accounts[0];
+                
+                // Get nonce from server
+                const nonceResponse = await fetch('https://shacker-proxy.onrender.com/wallet/nonce', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address })
+                });
+                
+                if (!nonceResponse.ok) throw new Error('Failed to get nonce');
+                const { nonce } = await nonceResponse.json();
+                
+                // Create message to sign
+                const message = `🎮 Link Wallet to Shacker Game\n\nLink Code: ${linkCode}\nWallet: ${address}\nNonce: ${nonce}\n\nSign to prove ownership`;
+                
+                statusDiv.innerHTML = '📝 Please sign the message in MetaMask...';
+                
+                // Request signature
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, address]
+                });
+                
+                statusDiv.innerHTML = '🔄 Verifying with server...';
+                
+                // Send to server with link code
+                const verifyResponse = await fetch('https://shacker-proxy.onrender.com/wallet/link-with-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        address, 
+                        signature, 
+                        nonce,
+                        linkCode 
+                    })
+                });
+                
+                const data = await verifyResponse.json();
+                
+                if (data.success) {
+                    // Store wallet and code
+                    localStorage.setItem('shackerWallet', address);
+                    localStorage.setItem('shackerLinkCode', linkCode);
+                    
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Wallet linked successfully!';
+                    
+                    // Show step 2
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                    document.getElementById('walletDisplay').textContent = address;
+                    document.getElementById('codeDisplay').textContent = linkCode;
+                    
+                } else {
+                    throw new Error(data.error || 'Verification failed');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ ' + error.message;
+            }
+        }
+        
+        // Check if already connected
+        window.addEventListener('load', function() {
+            const savedWallet = localStorage.getItem('shackerWallet');
+            const savedCode = localStorage.getItem('shackerLinkCode');
+            
+            if (savedWallet && savedCode) {
+                document.getElementById('linkCode').textContent = savedCode;
+                document.getElementById('codeDisplay').textContent = savedCode;
+            }
+        });
+    </script>
+</body>
+</html>
