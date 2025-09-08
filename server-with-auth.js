@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // Changed from bcrypt to bcryptjs for Render compatibility
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -106,11 +106,11 @@ app.post('/register', async (req, res) => {
             throw error;
         }
         
-        // Create JWT token
+        // Create JWT token with longer expiry
         const token = jwt.sign(
             { id: newUser.id, username: newUser.username },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '100y' } // Basically eternal (100 years)
         );
         
         res.json({ 
@@ -169,11 +169,11 @@ app.post('/login', async (req, res) => {
             user.games_today = 0;
         }
         
-        // Create JWT token
+        // Create JWT token with longer expiry
         const token = jwt.sign(
             { id: user.id, username: user.username },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '100y' } // Eternal (100 years)
         );
         
         res.json({ 
@@ -249,20 +249,57 @@ app.get('/can-play', authenticateToken, async (req, res) => {
     }
 });
 
-// GET scores (public endpoint for backward compatibility)
+// GET scores for NFT holders only
+app.get('/scores/holders', async (req, res) => {
+    try {
+        // Get only users with wallet addresses (NFT holders)
+        const { data: holders, error } = await supabase
+            .from('users')
+            .select('username, best_score, wallet_address')
+            .not('wallet_address', 'is', null)
+            .gt('best_score', 0)
+            .order('best_score', { ascending: false })
+            .limit(50);
+        
+        if (error) throw error;
+        
+        const scores = holders.map(user => ({
+            name: user.username,
+            score: user.best_score,
+            wallet: user.wallet_address.slice(0, 6) + '...',
+            level: Math.floor(user.best_score / 1000) + 1
+        }));
+        
+        res.json(scores);
+        
+    } catch (error) {
+        console.error('Error fetching holder scores:', error);
+        res.status(500).json({ error: 'Failed to fetch holder scores' });
+    }
+});
+
+// GET scores - ALL PLAYERS LEADERBOARD
 app.get('/scores', async (req, res) => {
     try {
-        // Get from JSONBin for now (will migrate to Supabase later)
-        const response = await axios.get(
-            `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,
-            {
-                headers: {
-                    'X-Access-Key': JSONBIN_API_KEY
-                }
-            }
-        );
+        // Get ALL players scores (everyone can appear on leaderboard)
+        const { data: topScores, error } = await supabase
+            .from('users')
+            .select('username, best_score, wallet_address')
+            // REMOVED wallet filter - show EVERYONE
+            .gt('best_score', 0)
+            .order('best_score', { ascending: false })
+            .limit(100);
         
-        const scores = response.data.record || [];
+        if (error) throw error;
+        
+        // Format for frontend
+        const scores = topScores.map(user => ({
+            name: user.username,
+            score: user.best_score,
+            level: Math.floor(user.best_score / 1000) + 1,
+            hasWallet: !!user.wallet_address // Show who has wallet
+        }));
+        
         res.json(scores);
         
     } catch (error) {
@@ -426,16 +463,68 @@ app.post('/scores-public', async (req, res) => {
     }
 });
 
+// UPDATE username
+app.post('/update-username', authenticateToken, async (req, res) => {
+    const { newUsername } = req.body;
+    
+    if (!newUsername || newUsername.length < 3 || newUsername.length > 20) {
+        return res.status(400).json({ error: 'Username must be 3-20 characters' });
+    }
+    
+    try {
+        // Check if username already taken
+        const { data: existing } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', newUsername)
+            .single();
+        
+        if (existing) {
+            return res.status(400).json({ error: 'Username already taken' });
+        }
+        
+        // Update username
+        const { data: updated, error } = await supabase
+            .from('users')
+            .update({ username: newUsername })
+            .eq('id', req.user.id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        res.json({ 
+            success: true, 
+            username: updated.username 
+        });
+        
+    } catch (error) {
+        console.error('Username update error:', error);
+        res.status(500).json({ error: 'Failed to update username' });
+    }
+});
+
 // GET user profile
 app.get('/profile', authenticateToken, async (req, res) => {
     try {
         const { data: user, error } = await supabase
             .from('users')
-            .select('username, email, created_at, total_games, best_score, games_today')
+            .select('username, email, created_at, total_games, best_score, games_today, wallet_address, has_nft')
             .eq('id', req.user.id)
             .single();
         
         if (error) throw error;
+        
+        // Check if can play today
+        const today = new Date().toDateString();
+        const lastGame = user.last_game_date ? new Date(user.last_game_date).toDateString() : '';
+        
+        if (today !== lastGame) {
+            user.games_today = 0;
+        }
+        
+        user.canPlay = user.games_today < DAILY_GAME_LIMIT;
+        user.gamesLeft = DAILY_GAME_LIMIT - user.games_today;
         
         res.json(user);
         
@@ -445,9 +534,396 @@ app.get('/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// Import wallet auth module
+const WalletAuth = require('./wallet-auth');
+const walletAuth = new WalletAuth(supabase, JWT_SECRET);
+
+// WALLET ROUTES
+
+// Get nonce for wallet signature
+app.post('/wallet/nonce', async (req, res) => {
+    const { address } = req.body;
+    
+    if (!address) {
+        return res.status(400).json({ error: 'Wallet address required' });
+    }
+    
+    try {
+        const nonce = walletAuth.generateNonce();
+        await walletAuth.saveNonce(address, nonce);
+        res.json({ nonce });
+    } catch (error) {
+        console.error('Nonce generation error:', error);
+        res.status(500).json({ error: 'Failed to generate nonce' });
+    }
+});
+
+// Verify wallet signature and authenticate
+app.post('/wallet/verify', async (req, res) => {
+    const { address, signature, nonce } = req.body;
+    
+    if (!address || !signature || !nonce) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        // Validate nonce
+        const nonceValid = await walletAuth.validateNonce(address, nonce);
+        if (!nonceValid) {
+            return res.status(401).json({ error: 'Invalid or expired nonce' });
+        }
+        
+        // Recreate the message that was signed
+        const message = `🎮 Welcome to Shacker Game!\n\nSign this message to prove you own this wallet.\n\nWallet: ${address}\nNonce: ${nonce}\n\nThis won't cost any gas.`;
+        
+        // Verify signature
+        const isValid = walletAuth.verifySignature(message, signature, address);
+        if (!isValid) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        // Check NFT ownership (optional for leaderboard access)
+        const NFT_CONTRACT = process.env.NFT_CONTRACT_ADDRESS;
+        let hasNFT = false;
+        
+        // Only check NFT if contract address is configured
+        if (NFT_CONTRACT && NFT_CONTRACT !== '0x...') {
+            try {
+                hasNFT = await walletAuth.checkNFTOwnership(address, NFT_CONTRACT);
+            } catch (error) {
+                console.log('NFT check skipped - no valid contract configured');
+            }
+        } else {
+            console.log('NFT verification disabled - no contract address set');
+        }
+        
+        // Find or create user
+        const user = await walletAuth.findOrCreateUserByWallet(address);
+        
+        // Update NFT status in database
+        if (hasNFT) {
+            await supabase
+                .from('users')
+                .update({ has_nft: true })
+                .eq('id', user.id);
+        }
+        
+        // Create JWT token
+        const token = jwt.sign(
+            { id: user.id, username: user.username, wallet: address, hasNFT },
+            JWT_SECRET,
+            { expiresIn: '100y' }
+        );
+        
+        res.json({
+            success: true,
+            token,
+            username: user.username,
+            wallet: address,
+            hasNFT,
+            gamesLeft: hasNFT ? 999 : DAILY_GAME_LIMIT - user.games_today,
+            leaderboardAccess: hasNFT
+        });
+        
+    } catch (error) {
+        console.error('Wallet verification error:', error);
+        res.status(500).json({ error: 'Wallet verification failed' });
+    }
+});
+
+// Link wallet to existing account (WITH SIGNATURE VERIFICATION)
+app.post('/wallet/link', authenticateToken, async (req, res) => {
+    const { wallet_address, signature, message } = req.body;
+    
+    if (!wallet_address || !signature || !message) {
+        return res.status(400).json({ error: 'Wallet address, signature and message required' });
+    }
+    
+    try {
+        // IMPORTANT: Verify the signature to prove ownership
+        const expectedMessage = `Link wallet to Shacker account: ${req.user.username}\nWallet: ${wallet_address}\nTimestamp: ${message.split('Timestamp: ')[1]}`;
+        
+        // Verify signature using ethers
+        const { ethers } = require('ethers');
+        const recoveredAddress = ethers.utils.verifyMessage(expectedMessage, signature);
+        
+        if (recoveredAddress.toLowerCase() !== wallet_address.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature - you do not own this wallet!' });
+        }
+        
+        // Now we know they really own the wallet
+        const updatedUser = await walletAuth.linkWalletToUser(req.user.id, wallet_address);
+        
+        res.json({
+            success: true,
+            message: 'Wallet linked successfully',
+            wallet: wallet_address
+        });
+        
+    } catch (error) {
+        console.error('Wallet linking error:', error);
+        res.status(500).json({ error: error.message || 'Failed to link wallet' });
+    }
+});
+
+// Removed code-based wallet linking - using direct link instead
+
+// Check NFT ownership
+app.post('/wallet/check-nft', async (req, res) => {
+    const { wallet_address, contract_address, token_id } = req.body;
+    
+    if (!wallet_address || !contract_address) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        const ownsNFT = await walletAuth.checkNFTOwnership(wallet_address, contract_address, token_id);
+        
+        res.json({
+            owns_nft: ownsNFT,
+            wallet: wallet_address,
+            contract: contract_address
+        });
+        
+    } catch (error) {
+        console.error('NFT check error:', error);
+        res.status(500).json({ error: 'NFT ownership check failed' });
+    }
+});
+
+// Store temporary codes (in production, use Redis or database)
+const tempCodes = new Map();
+
+// Store wallet linking sessions
+const linkSessions = new Map();
+
+// Create temporary code for wallet linking
+app.post('/wallet/create-code', authenticateToken, async (req, res) => {
+    const { code } = req.body;
+    
+    if (!code || code.length !== 6) {
+        return res.status(400).json({ error: 'Invalid code format' });
+    }
+    
+    // Store code with user info (expires in 10 minutes)
+    tempCodes.set(code, {
+        userId: req.user.id,
+        username: req.user.username,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+    });
+    
+    // Clean expired codes
+    for (const [key, value] of tempCodes.entries()) {
+        if (Date.now() > value.expiresAt) {
+            tempCodes.delete(key);
+        }
+    }
+    
+    res.json({ success: true, code, expiresIn: 600 });
+});
+
+// Verify code
+app.post('/wallet/verify-code', async (req, res) => {
+    const { code } = req.body;
+    
+    if (!code || code.length !== 6) {
+        return res.status(400).json({ valid: false, error: 'Invalid code format' });
+    }
+    
+    const codeData = tempCodes.get(code);
+    
+    if (!codeData || Date.now() > codeData.expiresAt) {
+        return res.status(404).json({ valid: false, error: 'Code expired or not found' });
+    }
+    
+    res.json({ 
+        valid: true, 
+        username: codeData.username,
+        userId: codeData.userId 
+    });
+});
+
+// Link wallet with code
+app.post('/wallet/link-with-code', async (req, res) => {
+    const { code, wallet_address, signature, message } = req.body;
+    
+    if (!code || !wallet_address || !signature || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Verify code
+    const codeData = tempCodes.get(code);
+    if (!codeData || Date.now() > codeData.expiresAt) {
+        return res.status(404).json({ error: 'Code expired or not found' });
+    }
+    
+    try {
+        // Verify signature
+        const { ethers } = require('ethers');
+        const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+        
+        if (recoveredAddress.toLowerCase() !== wallet_address.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        // Update user with wallet
+        const { data: updatedUser, error } = await supabase
+            .from('users')
+            .update({ wallet_address })
+            .eq('id', codeData.userId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        // Remove used code
+        tempCodes.delete(code);
+        
+        res.json({
+            success: true,
+            message: 'Wallet linked successfully',
+            wallet: wallet_address,
+            username: codeData.username
+        });
+        
+    } catch (error) {
+        console.error('Wallet linking error:', error);
+        res.status(500).json({ error: error.message || 'Failed to link wallet' });
+    }
+});
+
+// Create wallet linking session
+app.post('/wallet/create-session', authenticateToken, async (req, res) => {
+    // Generate unique session ID
+    const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    // Store session info
+    linkSessions.set(sessionId, {
+        userId: req.user.id,
+        username: req.user.username,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+        status: 'pending'
+    });
+    
+    // Clean expired sessions
+    for (const [key, value] of linkSessions.entries()) {
+        if (Date.now() > value.expiresAt) {
+            linkSessions.delete(key);
+        }
+    }
+    
+    res.json({ 
+        success: true, 
+        sessionId,
+        linkUrl: `https://shacker-game.vercel.app/wallet-auto-link.html?session=${sessionId}&user=${req.user.username}`
+    });
+});
+
+// Check session status
+app.get('/wallet/check-session', async (req, res) => {
+    const { id } = req.query;
+    
+    if (!id) {
+        return res.status(400).json({ valid: false, error: 'No session ID provided' });
+    }
+    
+    const session = linkSessions.get(id);
+    
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ valid: false, error: 'Session expired or not found' });
+    }
+    
+    res.json({ 
+        valid: true,
+        status: session.status,
+        username: session.username,
+        walletAddress: session.walletAddress
+    });
+});
+
+// Link wallet with session
+app.post('/wallet/link-session', async (req, res) => {
+    const { sessionId, walletAddress, signature, message } = req.body;
+    
+    if (!sessionId || !walletAddress || !signature || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Get session
+    const session = linkSessions.get(sessionId);
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ error: 'Session expired or not found' });
+    }
+    
+    try {
+        // Verify signature
+        const { ethers } = require('ethers');
+        const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+        
+        if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        // Update user with wallet
+        const { data: updatedUser, error } = await supabase
+            .from('users')
+            .update({ wallet_address: walletAddress })
+            .eq('id', session.userId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        // Update session
+        session.status = 'completed';
+        session.walletAddress = walletAddress;
+        linkSessions.set(sessionId, session);
+        
+        res.json({
+            success: true,
+            message: 'Wallet linked successfully!',
+            wallet: walletAddress,
+            username: session.username
+        });
+        
+    } catch (error) {
+        console.error('Session wallet linking error:', error);
+        res.status(500).json({ error: error.message || 'Failed to link wallet' });
+    }
+});
+
+// Poll session status (for game to check)
+app.get('/wallet/session-status', authenticateToken, async (req, res) => {
+    const { sessionId } = req.query;
+    
+    if (!sessionId) {
+        return res.status(400).json({ error: 'No session ID' });
+    }
+    
+    const session = linkSessions.get(sessionId);
+    
+    if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    if (session.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    res.json({
+        status: session.status,
+        walletAddress: session.walletAddress,
+        completed: session.status === 'completed'
+    });
+});
+
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Shacker Auth Server running on port ${PORT}`);
+    console.log(`🚀 Shacker Auth Server v2.1 FIXED running on port ${PORT}`);
     console.log(`📊 Supabase connected to: ${supabaseUrl}`);
     console.log(`🔐 Auth system enabled with ${DAILY_GAME_LIMIT} games/day limit`);
+    console.log(`🦊 MetaMask wallet auth enabled`);
+    console.log(`✅ ALL PLAYERS can now appear on leaderboard!`);
 });
