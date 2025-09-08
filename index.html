@@ -1682,43 +1682,57 @@
                                 '</div>' +
                             '</div>';
                         } else {
-                            // In OpenSea iframe - show professional message like other NFT projects
+                            // In OpenSea iframe - show NFT holder benefits message
                             document.getElementById('walletNotLinkedInfo').innerHTML = 
-                            '<div style="padding: 20px; background: linear-gradient(135deg, rgba(246,133,27,0.3), rgba(226,118,27,0.3)); border: 2px solid #f6851b; border-radius: 15px; text-align: center;">' +
-                                '<div style="color: #00ffcc; font-size: 20px; font-weight: bold; margin-bottom: 15px;">' +
-                                    '🎮 PLAY THE FULL GAME' +
+                            '<div style="padding: 25px; background: linear-gradient(135deg, rgba(246,133,27,0.4), rgba(226,118,27,0.3)); border: 3px solid #f6851b; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(246,133,27,0.3);">' +
+                                '<div style="color: #ffd700; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">' +
+                                    '🏆 NFT HOLDERS EXCLUSIVE LEADERBOARD 🏆' +
                                 '</div>' +
-                                '<div style="color: #ffd700; font-size: 16px; margin-bottom: 20px;">' +
-                                    'Connect your NFT wallet on our official site:' +
+                                '<div style="color: #00ffcc; font-size: 18px; margin-bottom: 25px; line-height: 1.5;">' +
+                                    'Own this NFT? Join the competitive leaderboard!<br>' +
+                                    '<span style="color: #fff; font-size: 16px;">Connect your wallet to verify NFT ownership</span>' +
                                 '</div>' +
                                 '<a href="https://shacker-game.vercel.app" target="_blank" style="' +
                                     'display: inline-block;' +
-                                    'background: linear-gradient(135deg, #f6851b, #e2761b);' +
-                                    'color: white;' +
-                                    'padding: 20px 40px;' +
-                                    'border-radius: 15px;' +
+                                    'background: linear-gradient(135deg, #00ff88, #00cc66);' +
+                                    'color: #000;' +
+                                    'padding: 20px 50px;' +
+                                    'border-radius: 50px;' +
                                     'text-decoration: none;' +
                                     'font-weight: bold;' +
-                                    'font-size: 22px;' +
-                                    'box-shadow: 0 5px 20px rgba(246,133,27,0.5);' +
-                                    'transition: transform 0.2s;"' +
-                                    'onmouseover="this.style.transform=\'scale(1.05)\'"' +
-                                    'onmouseout="this.style.transform=\'scale(1)\'">' +
-                                    '🚀 SHACKER-GAME.VERCEL.APP' +
+                                    'font-size: 20px;' +
+                                    'box-shadow: 0 8px 25px rgba(0,255,136,0.4);' +
+                                    'transition: all 0.3s;' +
+                                    'animation: pulse 2s infinite;"' +
+                                    'onmouseover="this.style.transform=\'scale(1.1)\'; this.style.boxShadow=\'0 12px 35px rgba(0,255,136,0.6)\'"' +
+                                    'onmouseout="this.style.transform=\'scale(1)\'; this.style.boxShadow=\'0 8px 25px rgba(0,255,136,0.4)\'">' +
+                                    '🎮 PLAY & JOIN LEADERBOARD' +
                                 '</a>' +
-                                '<div style="color: #aaa; margin-top: 20px; font-size: 14px; line-height: 1.6;">' +
-                                    '<div style="color: #00ffcc; font-weight: bold; margin-bottom: 10px;">✨ FULL FEATURES:</div>' +
-                                    '• Connect MetaMask directly<br>' +
-                                    '• NFT holder leaderboard<br>' +
-                                    '• Daily game limits<br>' +
-                                    '• Wallet verification<br>' +
-                                    '• No iframe restrictions!' +
-                                '</div>' +
-                                '<div style="margin-top: 20px; padding: 10px; background: rgba(0,255,136,0.1); border: 1px solid #00ff88; border-radius: 10px;">' +
-                                    '<div style="color: #00ff88; font-size: 12px;">' +
-                                        '💡 <b>Pro Tip:</b> OpenSea is for buying/selling NFTs.<br>' +
-                                        'Play the game on our official site for the best experience!' +
+                                '<div style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 15px; border: 2px solid #f6851b;">' +
+                                    '<div style="color: #ffd700; font-size: 16px; font-weight: bold; margin-bottom: 15px;">🎯 HOW IT WORKS:</div>' +
+                                    '<div style="color: #fff; font-size: 14px; text-align: left; line-height: 1.8;">' +
+                                        '1️⃣ <b style="color: #00ffcc;">Own the NFT</b> - Buy it here on OpenSea<br>' +
+                                        '2️⃣ <b style="color: #00ffcc;">Visit our site</b> - Click the button above<br>' +
+                                        '3️⃣ <b style="color: #00ffcc;">Connect wallet</b> - Verify your NFT ownership<br>' +
+                                        '4️⃣ <b style="color: #00ffcc;">Play & compete</b> - Join the exclusive leaderboard!' +
                                     '</div>' +
+                                '</div>' +
+                                '<div style="margin-top: 20px; display: flex; justify-content: space-around; flex-wrap: wrap;">' +
+                                    '<div style="padding: 10px; background: rgba(246,133,27,0.2); border-radius: 10px; margin: 5px; flex: 1; min-width: 100px;">' +
+                                        '<div style="color: #f6851b; font-size: 24px; font-weight: bold;">10</div>' +
+                                        '<div style="color: #aaa; font-size: 12px;">Games/Day</div>' +
+                                    '</div>' +
+                                    '<div style="padding: 10px; background: rgba(246,133,27,0.2); border-radius: 10px; margin: 5px; flex: 1; min-width: 100px;">' +
+                                        '<div style="color: #f6851b; font-size: 24px; font-weight: bold;">🦊</div>' +
+                                        '<div style="color: #aaa; font-size: 12px;">MetaMask</div>' +
+                                    '</div>' +
+                                    '<div style="padding: 10px; background: rgba(246,133,27,0.2); border-radius: 10px; margin: 5px; flex: 1; min-width: 100px;">' +
+                                        '<div style="color: #f6851b; font-size: 24px; font-weight: bold;">24/7</div>' +
+                                        '<div style="color: #aaa; font-size: 12px;">Online</div>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div style="margin-top: 20px; color: #888; font-size: 11px; font-style: italic;">' +
+                                    '⚡ Powered by Shacker Game | NFT verification required for leaderboard access' +
                                 '</div>' +
                             '</div>';
                         }
