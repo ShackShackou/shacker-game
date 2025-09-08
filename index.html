@@ -407,20 +407,28 @@
                 
                 <!-- OpenSea iframe solution -->
                 <div id="openSeaWalletOption" style="display: none; margin-top: 15px;">
-                    <p style="color: #ffd700; font-size: 14px;">🔒 On OpenSea? Link your wallet:</p>
-                    <button onclick="window.open('wallet-link-page.html', '_blank')" 
-                            class="btn" style="background: #f6851b; font-size: 16px; padding: 15px 30px;">
-                        🦊 Link Wallet (Opens New Tab)
-                    </button>
-                    <div style="margin-top: 15px;">
-                        <p style="color: #888; font-size: 12px;">Already linked? Enter your code:</p>
-                        <input type="text" id="linkCodeInput" placeholder="Enter 6-digit code" 
-                               style="padding: 10px; margin: 10px 0; background: rgba(0,0,0,0.5); 
-                                      border: 2px solid #00ffcc; color: white; border-radius: 5px;
-                                      text-transform: uppercase; text-align: center; letter-spacing: 2px;"
-                               maxlength="6">
-                        <button onclick="verifyLinkCode()" class="btn" style="display: block; margin: 10px auto; padding: 10px 20px;">
-                            ✅ Verify Code
+                    <div id="walletNotLinked">
+                        <p style="color: #ffd700; font-size: 14px;">🔒 On OpenSea? Link your wallet:</p>
+                        <button onclick="window.open('wallet-link-page.html', '_blank')" 
+                                class="btn" style="background: #f6851b; font-size: 16px; padding: 15px 30px;">
+                            🦊 Link Wallet (One Time Only)
+                        </button>
+                        <div style="margin-top: 15px;">
+                            <p style="color: #888; font-size: 12px;">Got your code? Enter it here:</p>
+                            <input type="text" id="linkCodeInput" placeholder="Enter 6-digit code" 
+                                   style="padding: 10px; margin: 10px 0; background: rgba(0,0,0,0.5); 
+                                          border: 2px solid #00ffcc; color: white; border-radius: 5px;
+                                          text-transform: uppercase; text-align: center; letter-spacing: 2px;"
+                                   maxlength="6">
+                            <button onclick="verifyLinkCode()" class="btn" style="display: block; margin: 10px auto; padding: 10px 20px;">
+                                ✅ Verify Code
+                            </button>
+                        </div>
+                    </div>
+                    <div id="walletAlreadyLinked" style="display: none;">
+                        <p style="color: #00ff88; font-size: 16px;">✅ Wallet already linked!</p>
+                        <button onclick="autoLoginWithWallet()" class="btn" style="background: #00ff88; color: black; margin-top: 10px;">
+                            🎮 Continue as NFT Holder
                         </button>
                     </div>
                 </div>
@@ -613,6 +621,29 @@
             if (isInIframe) {
                 // Show OpenSea wallet solution
                 document.getElementById('openSeaWalletOption').style.display = 'block';
+                
+                // Check if wallet was previously linked
+                const walletLinked = storage.getItem('walletLinked');
+                const savedWallet = storage.getItem('walletAddress');
+                const savedToken = storage.getItem('shackerToken');
+                
+                if (walletLinked === 'true' && savedWallet && savedToken) {
+                    console.log('Found saved wallet connection:', savedWallet);
+                    // Show "already linked" UI
+                    document.getElementById('walletNotLinked').style.display = 'none';
+                    document.getElementById('walletAlreadyLinked').style.display = 'block';
+                    
+                    // Auto-login if valid token
+                    authToken = savedToken;
+                    currentUsername = storage.getItem('shackerUsername');
+                    
+                    // Try auto-login
+                    setTimeout(() => {
+                        if (authToken) {
+                            checkAuth();
+                        }
+                    }, 500);
+                }
             }
             
             if (isMobile) {
@@ -1632,6 +1663,36 @@
             }
         });
         
+        // Auto-login with saved wallet
+        function autoLoginWithWallet() {
+            const savedToken = storage.getItem('shackerToken');
+            const savedUsername = storage.getItem('shackerUsername');
+            const savedWallet = storage.getItem('walletAddress');
+            
+            if (savedToken && savedUsername) {
+                authToken = savedToken;
+                currentUsername = savedUsername;
+                
+                // Skip login screen
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'flex';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('usernameDisplay').textContent = currentUsername;
+                document.getElementById('welcomeUsername').textContent = currentUsername;
+                document.getElementById('nameInput').style.display = 'none';
+                document.getElementById('welcomeMessage').style.display = 'block';
+                
+                // Show wallet badge
+                if (savedWallet) {
+                    document.getElementById('walletBadge').classList.add('active');
+                    document.getElementById('walletAddressDisplay').textContent = 
+                        savedWallet.slice(0, 6) + '...' + savedWallet.slice(-4);
+                }
+                
+                checkAuth();
+            }
+        }
+        
         // Function to verify link code
         async function verifyLinkCode() {
             const code = document.getElementById('linkCodeInput').value.trim().toUpperCase();
@@ -1706,8 +1767,12 @@
                     updateGamesLeftDisplay();
                     loadScores();
                     
+                    // Save permanently for next time
+                    storage.setItem('walletLinked', 'true');
+                    storage.setItem('walletLinkDate', new Date().toISOString());
+                    
                     document.getElementById('loginError').innerHTML = 
-                        '<div style="color: #00ff88;">✅ Wallet linked successfully!</div>';
+                        '<div style="color: #00ff88;">✅ Wallet linked successfully! You won\'t need to do this again.</div>';
                     
                 } else {
                     document.getElementById('loginError').textContent = 
