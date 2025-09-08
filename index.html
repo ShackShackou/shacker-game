@@ -826,8 +826,28 @@
                     document.getElementById('welcomeUsername').textContent = currentUsername;
                     document.getElementById('welcomeMessage').style.display = 'block';
                     
-                    // Check wallet link status from profile API
-                    checkWalletStatus();
+                    // Use wallet status directly from profile data (no need for another API call)
+                    if (data.wallet_address) {
+                        // Wallet already linked
+                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                        document.getElementById('walletLinkedInfo').style.display = 'block';
+                        document.getElementById('linkedWalletDisplay').textContent = 
+                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                        if (document.getElementById('walletBadge')) {
+                            document.getElementById('walletBadge').classList.add('active');
+                        }
+                        if (document.getElementById('walletAddressDisplay')) {
+                            document.getElementById('walletAddressDisplay').textContent = 
+                                data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                        }
+                    } else {
+                        // No wallet linked - show link button
+                        document.getElementById('walletNotLinkedInfo').style.display = 'block';
+                        document.getElementById('walletLinkedInfo').style.display = 'none';
+                        if (document.getElementById('walletBadge')) {
+                            document.getElementById('walletBadge').classList.remove('active');
+                        }
+                    }
                     
                     updateGamesLeftDisplay();
                     
