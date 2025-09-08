@@ -855,23 +855,28 @@
         function startGame() {
             console.log('Starting game... Auth:', authToken, 'Games left:', gamesLeft);
             
-            // Only block if we HAVE auth AND no games left
-            if (authToken && gamesLeft !== undefined && gamesLeft <= 0) {
+            // Only block if we HAVE auth AND explicitly no games left
+            if (authToken && typeof gamesLeft === 'number' && gamesLeft <= 0) {
                 alert('No games left today! Come back tomorrow!');
                 return;
             }
             
-            console.log('Game starting successfully!');
+            console.log('Game starting successfully! Initializing...');
             
             // Always use currentUsername when authenticated
             playerName = currentUsername || 'Player';
             
+            // Hide screens
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
             
             // HIDE USER INFO PANEL DURING GAME
             document.getElementById('userInfo').style.display = 'none';
             
+            // Make canvas visible
+            canvas.style.display = 'block';
+            
+            // Reset game state
             score = 0;
             level = 1;
             enemies = [];
@@ -879,7 +884,9 @@
             particles = [];
             player.trail = [];
             
+            // Set canvas size
             if (canvas.width === 0 || canvas.height === 0) {
+                console.log('Resizing canvas...');
                 canvas.width = window.innerWidth || 800;
                 canvas.height = window.innerHeight || 600;
             }
@@ -897,7 +904,13 @@
             }
             
             gameRunning = true;
-            gameLoop();
+            console.log('Game running set to true, starting game loop...');
+            try {
+                gameLoop();
+            } catch (error) {
+                console.error('Error starting game loop:', error);
+                alert('Error starting game: ' + error.message);
+            }
             
             if (!window.enemySpawnInterval) {
                 window.enemySpawnInterval = setInterval(function() {
