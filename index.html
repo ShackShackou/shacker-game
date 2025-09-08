@@ -460,6 +460,13 @@
                 <input type="email" id="regEmail" class="auth-input" placeholder="Email">
                 <input type="password" id="regPassword" class="auth-input" placeholder="Password (min 6 chars)">
                 
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,215,0,0.1); border: 1px solid #ffd700; border-radius: 10px;">
+                    <label style="color: #ffd700; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="hasNFT" style="margin-right: 10px; width: 20px; height: 20px;">
+                        <span>💎 I own an NFT (connect wallet after registration)</span>
+                    </label>
+                </div>
+                
                 <div class="auth-buttons">
                     <button class="btn btn-secondary" onclick="register()">CREATE ACCOUNT</button>
                     <button class="btn" onclick="showLogin()">BACK</button>
@@ -742,6 +749,9 @@
                     
                     document.getElementById('registerSuccess').textContent = 'Account created! Welcome!';
                     
+                    // Check if user wants to link NFT
+                    const wantsNFT = document.getElementById('hasNFT').checked;
+                    
                     setTimeout(() => {
                         document.getElementById('loginScreen').style.display = 'none';
                         document.getElementById('startScreen').style.display = 'flex';
@@ -750,6 +760,15 @@
                         document.getElementById('welcomeUsername').textContent = currentUsername;
                         document.getElementById('welcomeMessage').style.display = 'block';
                         updateGamesLeftDisplay();
+                        
+                        // If user has NFT, prompt to link wallet
+                        if (wantsNFT) {
+                            setTimeout(() => {
+                                if (confirm('🦊 Would you like to link your wallet now to appear on the NFT leaderboard?')) {
+                                    linkWalletToAccount();
+                                }
+                            }, 500);
+                        }
                     }, 1500);
                 } else {
                     document.getElementById('registerError').textContent = data.error || 'Registration failed';
@@ -1118,20 +1137,8 @@
             // Save score to server
             saveScore();
             
+            // Just show the score, no wallet prompt during game
             document.getElementById('finalScore').textContent = 'Score: ' + score;
-            
-            // Check if user has wallet/NFT for leaderboard
-            var hasWallet = storage.getItem('walletAddress');
-            if (!hasWallet && authToken) {
-                // Show link wallet button for logged-in users without wallet
-                document.getElementById('finalScore').innerHTML = 
-                    'Score: ' + score + '<br>' +
-                    '<div style="background: rgba(255,215,0,0.1); border: 2px solid #ffd700; padding: 15px; border-radius: 10px; margin-top: 20px;">' +
-                    '<p style="color: #ffd700; font-size: 18px; margin-bottom: 10px;">💎 Want to appear on the leaderboard?</p>' +
-                    '<p style="color: #888; font-size: 14px; margin-bottom: 15px;">Link your NFT wallet to compete!</p>' +
-                    '<button onclick="linkWalletToAccount()" class="btn" style="background: linear-gradient(135deg, #f6851b, #e2761b); font-size: 16px;">Link Wallet Now</button>' +
-                    '</div>';
-            }
             
             document.getElementById('gameOverScreen').style.display = 'flex';
             
