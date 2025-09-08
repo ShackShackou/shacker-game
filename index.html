@@ -592,7 +592,14 @@
         
         // Initialize when page loads
         window.onload = function() {
-            console.log('🔒 Shacker Secure Proxy loading...');
+            console.log('🔒 Shacker v2.1 loading...');
+            
+            // FORCE REMOVE any name input field (cache fix)
+            const oldNameInput = document.getElementById('nameInput');
+            if (oldNameInput) {
+                oldNameInput.remove();
+                console.log('Removed cached name input field');
+            }
             
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
