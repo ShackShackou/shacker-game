@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // Changed from bcrypt to bcryptjs for Render compatibility
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 
