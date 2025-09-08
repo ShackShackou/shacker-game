@@ -1474,8 +1474,35 @@
                 return;
             }
             
+            // Check if in iframe (OpenSea)
+            const isInIframe = window.parent !== window;
+            
+            if (isInIframe) {
+                // On OpenSea - open in new window
+                const linkUrl = `${window.location.origin}/wallet-link.html?token=${authToken}&username=${currentUsername}`;
+                window.open(linkUrl, '_blank', 'width=500,height=600');
+                
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<span style="color: #ffd700;">🔄 Complete wallet linking in the popup window...</span>';
+                
+                // Listen for success message
+                window.addEventListener('message', function(e) {
+                    if (e.data && e.data.type === 'wallet_linked') {
+                        // Update UI
+                        storage.setItem('walletAddress', e.data.wallet);
+                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                        document.getElementById('walletLinkedInfo').style.display = 'block';
+                        document.getElementById('linkedWalletDisplay').textContent = 
+                            e.data.wallet.slice(0, 6) + '...' + e.data.wallet.slice(-4);
+                        alert('✅ Wallet linked successfully!');
+                        loadScores();
+                    }
+                });
+                return;
+            }
+            
             try {
-                // Check for wallet
+                // Not in iframe - normal flow
                 if (!window.ethereum) {
                     alert('No wallet detected! Please install MetaMask.');
                     return;
