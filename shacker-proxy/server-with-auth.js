@@ -694,6 +694,9 @@ app.post('/wallet/check-nft', async (req, res) => {
 // Store temporary codes (in production, use Redis or database)
 const tempCodes = new Map();
 
+// Store wallet linking sessions
+const linkSessions = new Map();
+
 // Create temporary code for wallet linking
 app.post('/wallet/create-code', authenticateToken, async (req, res) => {
     const { code } = req.body;
@@ -788,6 +791,132 @@ app.post('/wallet/link-with-code', async (req, res) => {
         console.error('Wallet linking error:', error);
         res.status(500).json({ error: error.message || 'Failed to link wallet' });
     }
+});
+
+// Create wallet linking session
+app.post('/wallet/create-session', authenticateToken, async (req, res) => {
+    // Generate unique session ID
+    const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    // Store session info
+    linkSessions.set(sessionId, {
+        userId: req.user.id,
+        username: req.user.username,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+        status: 'pending'
+    });
+    
+    // Clean expired sessions
+    for (const [key, value] of linkSessions.entries()) {
+        if (Date.now() > value.expiresAt) {
+            linkSessions.delete(key);
+        }
+    }
+    
+    res.json({ 
+        success: true, 
+        sessionId,
+        linkUrl: `https://shacker-game.vercel.app/wallet-auto-link.html?session=${sessionId}&user=${req.user.username}`
+    });
+});
+
+// Check session status
+app.get('/wallet/check-session', async (req, res) => {
+    const { id } = req.query;
+    
+    if (!id) {
+        return res.status(400).json({ valid: false, error: 'No session ID provided' });
+    }
+    
+    const session = linkSessions.get(id);
+    
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ valid: false, error: 'Session expired or not found' });
+    }
+    
+    res.json({ 
+        valid: true,
+        status: session.status,
+        username: session.username,
+        walletAddress: session.walletAddress
+    });
+});
+
+// Link wallet with session
+app.post('/wallet/link-session', async (req, res) => {
+    const { sessionId, walletAddress, signature, message } = req.body;
+    
+    if (!sessionId || !walletAddress || !signature || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Get session
+    const session = linkSessions.get(sessionId);
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ error: 'Session expired or not found' });
+    }
+    
+    try {
+        // Verify signature
+        const { ethers } = require('ethers');
+        const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+        
+        if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        // Update user with wallet
+        const { data: updatedUser, error } = await supabase
+            .from('users')
+            .update({ wallet_address: walletAddress })
+            .eq('id', session.userId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        // Update session
+        session.status = 'completed';
+        session.walletAddress = walletAddress;
+        linkSessions.set(sessionId, session);
+        
+        res.json({
+            success: true,
+            message: 'Wallet linked successfully!',
+            wallet: walletAddress,
+            username: session.username
+        });
+        
+    } catch (error) {
+        console.error('Session wallet linking error:', error);
+        res.status(500).json({ error: error.message || 'Failed to link wallet' });
+    }
+});
+
+// Poll session status (for game to check)
+app.get('/wallet/session-status', authenticateToken, async (req, res) => {
+    const { sessionId } = req.query;
+    
+    if (!sessionId) {
+        return res.status(400).json({ error: 'No session ID' });
+    }
+    
+    const session = linkSessions.get(sessionId);
+    
+    if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    if (session.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    res.json({
+        status: session.status,
+        walletAddress: session.walletAddress,
+        completed: session.status === 'completed'
+    });
 });
 
 // Start server

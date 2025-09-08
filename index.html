@@ -365,6 +365,28 @@
             display: block;
         }
         
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(246,133,27,0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(246,133,27,0.3); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(246,133,27,0); }
+        }
+        
+        .spinner {
+            border: 3px solid rgba(0,255,204,0.1);
+            border-top: 3px solid #00ffcc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         #gameOverScreen {
             position: absolute;
             width: 100%;
@@ -1545,29 +1567,90 @@
             console.log('Is in iframe (OpenSea)?', isInIframe);
             
             if (isInIframe) {
-                // On OpenSea - generate a temporary code
-                const code = generateLinkCode();
-                const linkUrl = `https://shacker-game.vercel.app/wallet-link-code.html?code=${code}`;
+                // On OpenSea - create a session for wallet linking
+                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                    '<div style="padding: 10px; background: rgba(246,133,27,0.2); border: 1px solid #f6851b; border-radius: 10px;">' +
+                        '<div class="spinner"></div>' +
+                        '<div style="color: #ffd700;">Creating secure session...</div>' +
+                    '</div>';
                 
-                // Request code from server
-                fetch(API_URL + '/wallet/create-code', {
+                // Create session on server
+                fetch(API_URL + '/wallet/create-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + authToken
-                    },
-                    body: JSON.stringify({ code })
+                    }
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Code created:', data);
+                    if (data.success) {
+                        const sessionId = data.sessionId;
+                        const linkUrl = data.linkUrl;
+                        
+                        // Show the link
+                        document.getElementById('walletNotLinkedInfo').innerHTML = 
+                            '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px;">' +
+                                '<div style="color: #00ffcc; font-size: 18px; font-weight: bold; margin-bottom: 15px;">' +
+                                    '🦊 Click to Connect Your Wallet' +
+                                '</div>' +
+                                '<a href="' + linkUrl + '" target="_blank" style="' +
+                                    'display: inline-block;' +
+                                    'background: linear-gradient(135deg, #f6851b, #e2761b);' +
+                                    'color: white;' +
+                                    'padding: 15px 30px;' +
+                                    'border-radius: 10px;' +
+                                    'text-decoration: none;' +
+                                    'font-weight: bold;' +
+                                    'font-size: 18px;' +
+                                    'animation: pulse 2s infinite;">' +
+                                    '🔗 CONNECT WALLET NOW' +
+                                '</a>' +
+                                '<div style="color: #aaa; margin-top: 15px; font-size: 12px;">' +
+                                    '✅ Opens in new tab<br>' +
+                                    '✅ Auto-connects MetaMask<br>' +
+                                    '✅ Returns here when done' +
+                                '</div>' +
+                            '</div>';
+                        
+                        // Start polling for completion
+                        const pollInterval = setInterval(() => {
+                            fetch(API_URL + '/wallet/session-status?sessionId=' + sessionId, {
+                                headers: {
+                                    'Authorization': 'Bearer ' + authToken
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(status => {
+                                if (status.completed) {
+                                    clearInterval(pollInterval);
+                                    // Update UI
+                                    storage.setItem('walletAddress', status.walletAddress);
+                                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                                    document.getElementById('walletLinkedInfo').style.display = 'block';
+                                    document.getElementById('linkedWalletDisplay').textContent = 
+                                        status.walletAddress.slice(0, 6) + '...' + status.walletAddress.slice(-4);
+                                    alert('✅ Wallet linked successfully!');
+                                    loadScores();
+                                }
+                            })
+                            .catch(error => {
+                                console.log('Poll error:', error);
+                            });
+                        }, 2000); // Check every 2 seconds
+                        
+                        // Stop polling after 10 minutes
+                        setTimeout(() => clearInterval(pollInterval), 600000);
+                    }
                 })
                 .catch(error => {
-                    console.error('Code creation error:', error);
+                    console.error('Session creation error:', error);
+                    document.getElementById('walletNotLinkedInfo').innerHTML = 
+                        '<div style="color: #ff4444;">Error: ' + error.message + '</div>';
                 });
                 
-                // Show code and link
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
+                // Remove old code display (now handled above)
+                /* document.getElementById('walletNotLinkedInfo').innerHTML = 
                     '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px; margin: 10px 0;">' +
                         '<div style="color: #ffd700; margin-bottom: 15px; font-size: 16px; font-weight: bold;">' +
                             '🦊 Link Your Wallet - Code Method' +
@@ -1619,7 +1702,7 @@
                         '<div style="color: #ff9900; margin-top: 10px; font-size: 11px;">' +
                             '⚠️ After linking, refresh this page!' +
                         '</div>' +
-                    '</div>';
+                    '</div>'; */
                 
                 // Still listen for success message in case they come back
                 window.addEventListener('message', function(e) {
