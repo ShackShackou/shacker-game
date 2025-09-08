@@ -693,8 +693,9 @@ app.post('/wallet/check-nft', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Shacker Auth Server running on port ${PORT}`);
+    console.log(`🚀 Shacker Auth Server v2.1 FIXED running on port ${PORT}`);
     console.log(`📊 Supabase connected to: ${supabaseUrl}`);
     console.log(`🔐 Auth system enabled with ${DAILY_GAME_LIMIT} games/day limit`);
     console.log(`🦊 MetaMask wallet auth enabled`);
+    console.log(`✅ ALL PLAYERS can now appear on leaderboard!`);
 });
