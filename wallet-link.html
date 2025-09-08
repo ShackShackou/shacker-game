@@ -161,6 +161,15 @@
                         wallet_address.slice(0, 6) + '...' + wallet_address.slice(-4);
                     document.getElementById('success-info').style.display = 'block';
                     
+                    // Store in localStorage for the game to check
+                    try {
+                        localStorage.setItem('walletAddress', wallet_address);
+                        localStorage.setItem('walletLinked', 'true');
+                        localStorage.setItem('walletLinkTime', new Date().toISOString());
+                    } catch (e) {
+                        console.log('Could not save to localStorage:', e);
+                    }
+                    
                     // Send message back to parent window (game in iframe)
                     if (window.opener) {
                         window.opener.postMessage({
@@ -168,6 +177,13 @@
                             wallet: wallet_address
                         }, '*');
                     }
+                    
+                    // Auto-close after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('success-info').innerHTML += 
+                            '<div style="color: #00ff88; margin-top: 20px;">Window will close in 3 seconds...</div>';
+                        setTimeout(() => window.close(), 3000);
+                    }, 1000);
                     
                 } else {
                     throw new Error(data.error || 'Failed to link wallet');

@@ -807,16 +807,20 @@
                     document.getElementById('welcomeUsername').textContent = currentUsername;
                     document.getElementById('welcomeMessage').style.display = 'block';
                     
-                    // Check if wallet is linked
-                    if (data.wallet_address) {
-                        storage.setItem('walletAddress', data.wallet_address);
+                    // Check if wallet is linked (from server or localStorage)
+                    const walletFromStorage = localStorage.getItem('walletLinked') === 'true' ? 
+                        localStorage.getItem('walletAddress') : null;
+                    const walletAddress = data.wallet_address || walletFromStorage;
+                    
+                    if (walletAddress) {
+                        storage.setItem('walletAddress', walletAddress);
                         document.getElementById('walletNotLinkedInfo').style.display = 'none';
                         document.getElementById('walletLinkedInfo').style.display = 'block';
                         document.getElementById('linkedWalletDisplay').textContent = 
-                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
                         document.getElementById('walletBadge').classList.add('active');
                         document.getElementById('walletAddressDisplay').textContent = 
-                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
+                            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
                     }
                     
                     updateGamesLeftDisplay();
@@ -1515,21 +1519,33 @@
             const isInIframe = window.parent !== window;
             
             if (isInIframe) {
-                // On OpenSea - open in new window
-                // Use absolute URL for the game domain, not OpenSea's domain
+                // On OpenSea - show direct link instead of popup (popups are blocked)
                 const linkUrl = `https://shacker-game.vercel.app/wallet-link.html?token=${authToken}&username=${currentUsername}`;
-                console.log('Opening wallet link popup:', linkUrl);
-                const popup = window.open(linkUrl, '_blank', 'width=500,height=600');
                 
-                if (!popup || popup.closed || typeof popup.closed == 'undefined') {
-                    alert('⚠️ Popup was blocked! Please allow popups for this site and try again.');
-                    return;
-                }
+                // Create a clickable link instead of using popup
+                document.getElementById('walletNotLinkedInfo').innerHTML = `
+                    <div style="padding: 10px; background: rgba(246,133,27,0.2); border: 1px solid #f6851b; border-radius: 10px; margin: 10px 0;">
+                        <div style="color: #ffd700; margin-bottom: 10px;">
+                            🦊 OpenSea blocks popups! Click the link below:
+                        </div>
+                        <a href="${linkUrl}" target="_blank" style="
+                            display: inline-block;
+                            background: linear-gradient(135deg, #f6851b, #e2761b);
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            font-weight: bold;
+                        ">
+                            🔗 Open Wallet Link Page
+                        </a>
+                        <div style="color: #888; margin-top: 10px; font-size: 12px;">
+                            After linking, refresh this page to see your wallet status
+                        </div>
+                    </div>
+                `;
                 
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #ffd700;">🔄 Complete wallet linking in the popup window...</span>';
-                
-                // Listen for success message
+                // Still listen for success message in case they come back
                 window.addEventListener('message', function(e) {
                     if (e.data && e.data.type === 'wallet_linked') {
                         // Update UI
