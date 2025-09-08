@@ -854,6 +854,9 @@
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
             
+            // HIDE USER INFO PANEL DURING GAME
+            document.getElementById('userInfo').style.display = 'none';
+            
             score = 0;
             level = 1;
             enemies = [];
@@ -1126,6 +1129,9 @@
         function endGame() {
             console.log('GAME OVER - Score:', score);
             gameRunning = false;
+            
+            // SHOW USER INFO PANEL AGAIN
+            document.getElementById('userInfo').style.display = 'block';
             
             // Add the new score to local array immediately
             var newScore = {
@@ -1475,6 +1481,9 @@
             
             document.getElementById('gameOverScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'flex';
+            
+            // SHOW USER INFO PANEL ON MENU
+            document.getElementById('userInfo').style.display = 'block';
         }
         
         console.log('🔒 Shacker Secure Proxy Version');
