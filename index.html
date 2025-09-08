@@ -1510,6 +1510,8 @@
         
         // Link wallet to existing account
         async function linkWalletToAccount() {
+            console.log('Link wallet clicked! AuthToken:', authToken);
+            
             if (!authToken) {
                 alert('Please login first');
                 return;
@@ -1517,30 +1519,57 @@
             
             // Check if in iframe (OpenSea)
             const isInIframe = window.parent !== window;
+            console.log('Is in iframe (OpenSea)?', isInIframe);
             
             if (isInIframe) {
                 // On OpenSea - show direct link instead of popup (popups are blocked)
                 const linkUrl = `https://shacker-game.vercel.app/wallet-link.html?token=${authToken}&username=${currentUsername}`;
                 
-                // Create a clickable link instead of using popup
+                // Create both a clickable link AND a copy button
                 document.getElementById('walletNotLinkedInfo').innerHTML = `
                     <div style="padding: 10px; background: rgba(246,133,27,0.2); border: 1px solid #f6851b; border-radius: 10px; margin: 10px 0;">
-                        <div style="color: #ffd700; margin-bottom: 10px;">
-                            🦊 OpenSea blocks popups! Click the link below:
+                        <div style="color: #ffd700; margin-bottom: 10px; font-size: 14px;">
+                            🦊 To link your wallet on OpenSea:
                         </div>
-                        <a href="${linkUrl}" target="_blank" style="
-                            display: inline-block;
-                            background: linear-gradient(135deg, #f6851b, #e2761b);
-                            color: white;
-                            padding: 10px 20px;
-                            border-radius: 5px;
-                            text-decoration: none;
-                            font-weight: bold;
-                        ">
-                            🔗 Open Wallet Link Page
-                        </a>
-                        <div style="color: #888; margin-top: 10px; font-size: 12px;">
-                            After linking, refresh this page to see your wallet status
+                        <div style="margin: 10px 0;">
+                            <a href="${linkUrl}" target="_blank" style="
+                                display: inline-block;
+                                background: linear-gradient(135deg, #f6851b, #e2761b);
+                                color: white;
+                                padding: 12px 24px;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                font-weight: bold;
+                                margin-bottom: 10px;
+                            ">
+                                🔗 Click Here to Open Wallet Link
+                            </a>
+                        </div>
+                        <div style="color: #aaa; font-size: 11px; margin-top: 5px;">
+                            OR copy this link and open in new tab:
+                        </div>
+                        <div style="display: flex; gap: 5px; margin-top: 5px;">
+                            <input type="text" value="${linkUrl}" readonly style="
+                                flex: 1;
+                                padding: 5px;
+                                background: rgba(0,0,0,0.5);
+                                border: 1px solid #444;
+                                color: #fff;
+                                border-radius: 3px;
+                                font-size: 10px;
+                            " id="walletLinkUrl">
+                            <button onclick="navigator.clipboard.writeText('${linkUrl}').then(() => alert('Link copied!'))" style="
+                                padding: 5px 10px;
+                                background: #00ff88;
+                                color: black;
+                                border: none;
+                                border-radius: 3px;
+                                cursor: pointer;
+                                font-size: 10px;
+                            ">📋 Copy</button>
+                        </div>
+                        <div style="color: #ff9900; margin-top: 10px; font-size: 11px;">
+                            ⚠️ After linking, refresh this page!
                         </div>
                     </div>
                 `;
