@@ -185,7 +185,7 @@
                 statusDiv.innerHTML = '<div class="spinner"></div>🔄 Verifying with server...';
                 
                 // Send to server
-                const response = await fetch('https://shacker-proxy.onrender.com/wallet/link-session', {
+                const response = await fetch('https://api.shackers.io/wallet/link-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -250,7 +250,7 @@
             }
             
             try {
-                const response = await fetch('https://shacker-proxy.onrender.com/wallet/check-session?id=' + sessionId);
+                const response = await fetch('https://api.shackers.io/wallet/check-session?id=' + sessionId);
                 const data = await response.json();
                 
                 if (data.valid) {
