@@ -1606,20 +1606,38 @@
                             data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
                     }
                 } else {
-                    console.log('No wallet linked - showing link button');
-                    // No wallet linked - show link button
-                    document.getElementById('walletNotLinkedInfo').style.display = 'block';
-                    document.getElementById('walletLinkedInfo').style.display = 'none';
-                    if (document.getElementById('walletBadge')) {
-                        document.getElementById('walletBadge').classList.remove('active');
+                    console.log('No wallet linked - checking if in iframe');
+                    // Check if in iframe (OpenSea)
+                    const isInIframe = window.parent !== window;
+                    if (!isInIframe) {
+                        // Only show link button if NOT in iframe
+                        console.log('Not in iframe - showing link button');
+                        document.getElementById('walletNotLinkedInfo').style.display = 'block';
+                        document.getElementById('walletLinkedInfo').style.display = 'none';
+                        if (document.getElementById('walletBadge')) {
+                            document.getElementById('walletBadge').classList.remove('active');
+                        }
+                    } else {
+                        console.log('In iframe - hiding wallet UI');
+                        // In iframe - hide both wallet UI elements
+                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                        document.getElementById('walletLinkedInfo').style.display = 'none';
                     }
                 }
             })
             .catch(error => {
                 console.log('Could not check wallet status:', error);
-                // Default to showing link button
-                document.getElementById('walletNotLinkedInfo').style.display = 'block';
-                document.getElementById('walletLinkedInfo').style.display = 'none';
+                // Check if in iframe before showing button
+                const isInIframe = window.parent !== window;
+                if (!isInIframe) {
+                    // Only show link button if NOT in iframe
+                    document.getElementById('walletNotLinkedInfo').style.display = 'block';
+                    document.getElementById('walletLinkedInfo').style.display = 'none';
+                } else {
+                    // In iframe - hide both
+                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
+                    document.getElementById('walletLinkedInfo').style.display = 'none';
+                }
             });
         }
         
