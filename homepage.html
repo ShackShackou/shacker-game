@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHACKERS - NFT Gaming Universe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated gradient background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f1419 50%, #000000 100%);
+            background-size: 1000% 1000%;
+            animation: gradientShift 20s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Particle network effect */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header */
+        header {
+            padding: 30px 0;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 80px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00ffcc, #00ff88, #00ffcc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 204, 0.5);
+            animation: glow 2s ease-in-out infinite;
+            letter-spacing: 10px;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        /* Video Portal Section */
+        .portal-section {
+            margin: 50px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .portal-container {
+            display: inline-block;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.3);
+        }
+
+        .portal-video {
+            width: 600px;
+            max-width: 90vw;
+            height: auto;
+            display: block;
+        }
+
+        /* Main content */
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .hero h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #f6851b, #e2761b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #aaa;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+
+        .btn {
+            padding: 20px 50px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #000;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #00ffcc;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #00ffcc;
+            color: #000;
+            transform: translateY(-5px);
+        }
+
+        /* Feature cards */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 80px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: #00ffcc;
+            box-shadow: 0 20px 40px rgba(0, 255, 204, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 24px;
+            color: #00ffcc;
+            margin-bottom: 15px;
+        }
+
+        .feature-desc {
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 100px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            color: #00ffcc;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            transform: scale(1.2);
+            color: #00ff88;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 50px;
+                letter-spacing: 5px;
+            }
+            
+            .hero h2 {
+                font-size: 28px;
+            }
+            
+            .btn {
+                padding: 15px 30px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-animation"></div>
+    <canvas id="particles-canvas"></canvas>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1 class="logo">SHACKERS</h1>
+        </header>
+
+        <!-- Video Portal Section -->
+        <div class="portal-section">
+            <div class="portal-container">
+                <video class="portal-video" autoplay loop muted playsinline>
+                    <source src="portal.webm" type="video/webm">
+                    <source src="portal.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h2>Enter the NFT Gaming Universe</h2>
+            <p>Join the exclusive SHACKERS community. Play, compete, and dominate the leaderboard with your NFT.</p>
+            
+            <div class="btn-group">
+                <a href="index.html" class="btn btn-primary">🎮 Play Game</a>
+                <a href="https://opensea.io/collection/shackers" class="btn btn-secondary">🦊 View NFTs</a>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🎮</div>
+                <h3 class="feature-title">Addictive Gameplay</h3>
+                <p class="feature-desc">Dodge, collect, and survive in this fast-paced arcade experience. Test your reflexes and climb the ranks!</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3 class="feature-title">NFT Leaderboard</h3>
+                <p class="feature-desc">Only NFT holders can appear on the exclusive leaderboard. Prove your skills and earn your place!</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💎</div>
+                <h3 class="feature-title">Exclusive Access</h3>
+                <p class="feature-desc">NFT ownership unlocks special features, daily game limits, and community perks.</p>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="hero">
+            <h2>Ready to Join?</h2>
+            <div class="btn-group">
+                <a href="index.html" class="btn btn-primary">Start Playing Now</a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2024 SHACKERS - All Rights Reserved</p>
+            <div class="social-links">
+                <a href="https://twitter.com/shackers" target="_blank">🐦 Twitter</a>
+                <a href="https://discord.gg/shackers" target="_blank">💬 Discord</a>
+                <a href="https://opensea.io/collection/shackers" target="_blank">⛵ OpenSea</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Particle Network Animation -->
+    <script>
+        // Particle network effect
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 100;
+        const connectionDistance = 150;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > canvas.height) this.vy = -this.vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 255, 204, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Draw connections
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0, 255, 204, ${0.2 * (1 - distance / connectionDistance)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
