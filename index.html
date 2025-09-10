@@ -112,6 +112,30 @@
             margin-top: 10px !important;
         }
         
+        #connectWalletSection {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(246, 133, 27, 0.1);
+            border: 2px solid #f6851b;
+            border-radius: 10px;
+        }
+        
+        #connectWalletSection button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #f6851b, #e2761b);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        #connectWalletSection button:hover {
+            background: linear-gradient(135deg, #ff9933, #f6851b);
+        }
+        
         #nameInput {
             padding: 15px;
             font-size: 18px;
@@ -487,20 +511,14 @@
                 <input type="email" id="regEmail" class="auth-input" placeholder="Email">
                 <input type="password" id="regPassword" class="auth-input" placeholder="Password (min 6 chars)">
                 
-                <!-- Web3 Wallet Connection -->
-                <div style="margin: 15px 0; padding: 15px; background: rgba(246,133,27,0.1); border: 2px solid #f6851b; border-radius: 10px;">
-                    <div style="color: #f6851b; font-weight: bold; margin-bottom: 10px;">🦊 Connect Wallet (Optional)</div>
-                    <div id="walletStatus" style="color: #888; font-size: 14px; margin-bottom: 10px;">
-                        Not connected
-                    </div>
-                    <button class="btn" id="connectWalletBtn" onclick="connectWalletDuringRegistration()" style="background: linear-gradient(135deg, #f6851b, #e2761b); width: 100%;">
-                        Connect MetaMask
-                    </button>
-                    <div id="walletAddress" style="color: #00ffcc; font-size: 12px; margin-top: 10px; word-break: break-all; display: none;"></div>
+                <div style="margin: 15px 0; padding: 10px; background: rgba(255,215,0,0.1); border: 1px solid #ffd700; border-radius: 10px;">
+                    <p style="color: #ffd700; font-size: 14px; text-align: center;">
+                        💡 You can connect your wallet after creating your account
+                    </p>
                 </div>
                 
                 <div class="auth-buttons">
-                    <button class="btn btn-secondary" onclick="registerWithWallet()">CREATE ACCOUNT</button>
+                    <button class="btn btn-secondary" onclick="register()">CREATE ACCOUNT</button>
                     <button class="btn" onclick="showLogin()">BACK</button>
                 </div>
                 
@@ -665,14 +683,10 @@
             
             if (authToken && currentUsername) {
                 checkAuth();
-                // Also check wallet status after a short delay to ensure UI is ready
+                // Show wallet connect option after a short delay to ensure UI is ready
                 setTimeout(() => {
-                    console.log('Double-checking wallet status on page load...');
-                    checkWalletStatus();
-                    // Display wallet if saved
-                    if (connectedWallet) {
-                        updateWalletStatusDisplay(connectedWallet);
-                    }
+                    console.log('Checking wallet status on page load...');
+                    showWalletConnectOption();
                 }, 1000);
             } else {
                 // ALWAYS show login screen - auth is required
@@ -755,8 +769,8 @@
                     document.getElementById('welcomeMessage').style.display = 'block';
                     updateGamesLeftDisplay();
                     
-                    // Check wallet link status immediately after login
-                    checkWalletStatus();
+                    // Show wallet connect option after login
+                    showWalletConnectOption();
                     
                     loadScores();
                 } else {
@@ -773,7 +787,6 @@
         // Web3 variables
         var web3 = null;
         var connectedWallet = null;
-        var pendingWalletAddress = null;
         
         // Initialize Web3
         function initWeb3() {
@@ -787,37 +800,9 @@
             return false;
         }
         
-        // Connect wallet during registration
-        async function connectWalletDuringRegistration() {
-            if (!initWeb3()) {
-                alert('Please install MetaMask to connect your wallet!');
-                return;
-            }
-            
-            try {
-                // Request account access
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                
-                if (accounts.length > 0) {
-                    pendingWalletAddress = accounts[0];
-                    document.getElementById('walletStatus').textContent = 'Connected';
-                    document.getElementById('walletStatus').style.color = '#00ffcc';
-                    document.getElementById('walletAddress').textContent = 'Address: ' + pendingWalletAddress;
-                    document.getElementById('walletAddress').style.display = 'block';
-                    document.getElementById('connectWalletBtn').textContent = 'Wallet Connected ✓';
-                    document.getElementById('connectWalletBtn').style.background = 'linear-gradient(135deg, #00ff88, #00cc66)';
-                    
-                    console.log('Wallet connected during registration:', pendingWalletAddress);
-                }
-            } catch (error) {
-                console.error('Error connecting wallet:', error);
-                document.getElementById('walletStatus').textContent = 'Connection failed';
-                document.getElementById('walletStatus').style.color = '#ff4444';
-            }
-        }
         
-        // Modified register function with wallet support
-        function registerWithWallet() {
+        // Standard register function without wallet
+        function register() {
             var username = document.getElementById('regUsername').value;
             var email = document.getElementById('regEmail').value;
             var password = document.getElementById('regPassword').value;
@@ -832,19 +817,12 @@
                 return;
             }
             
-            // Prepare registration data with wallet if connected
-            var registrationData = { username, email, password };
-            if (pendingWalletAddress) {
-                registrationData.walletAddress = pendingWalletAddress;
-                console.log('Registering with wallet:', pendingWalletAddress);
-            }
-            
             fetch(API_URL + '/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(registrationData)
+                body: JSON.stringify({ username, email, password })
             })
             .then(response => {
                 if (!response.ok) {
@@ -861,14 +839,7 @@
                     storage.setItem('shackerToken', authToken);
                     storage.setItem('shackerUsername', currentUsername);
                     
-                    // Store wallet if connected
-                    if (pendingWalletAddress) {
-                        storage.setItem('shackerWallet', pendingWalletAddress);
-                        connectedWallet = pendingWalletAddress;
-                    }
-                    
-                    document.getElementById('registerSuccess').textContent = pendingWalletAddress ? 
-                        'Account created with wallet linked!' : 'Account created! Welcome!';
+                    document.getElementById('registerSuccess').textContent = 'Account created! Welcome!';
                     
                     setTimeout(() => {
                         document.getElementById('loginScreen').style.display = 'none';
@@ -879,10 +850,8 @@
                         document.getElementById('welcomeMessage').style.display = 'block';
                         updateGamesLeftDisplay();
                         
-                        // Update wallet status if linked
-                        if (pendingWalletAddress) {
-                            updateWalletStatusDisplay(pendingWalletAddress);
-                        }
+                        // Show wallet connect button after registration
+                        showWalletConnectOption();
                         
                         loadScores();
                     }, 1500);
@@ -896,19 +865,72 @@
             });
         }
         
-        // Keep the old register function for backward compatibility
-        function register() {
-            registerWithWallet();
-        }
-        
         // Update wallet status display
         function updateWalletStatusDisplay(address) {
-            const walletStatusElement = document.querySelector('#userInfo .wallet-status');
-            if (walletStatusElement) {
-                walletStatusElement.innerHTML = `
-                    <div style="color: #00ffcc;">🦊 Wallet Connected</div>
-                    <div style="font-size: 11px; color: #888; word-break: break-all;">${address}</div>
-                `;
+            const walletNotLinked = document.getElementById('walletNotLinkedInfo');
+            const walletLinked = document.getElementById('walletLinkedInfo');
+            const walletDisplay = document.getElementById('linkedWalletDisplay');
+            
+            if (address) {
+                // Hide not linked, show linked
+                if (walletNotLinked) walletNotLinked.style.display = 'none';
+                if (walletLinked) walletLinked.style.display = 'block';
+                if (walletDisplay) {
+                    walletDisplay.textContent = address.substring(0, 6) + '...' + address.substring(address.length - 4);
+                }
+                connectedWallet = address;
+                storage.setItem('shackerWallet', address);
+            } else {
+                // Show not linked, hide linked
+                if (walletNotLinked) walletNotLinked.style.display = 'block';
+                if (walletLinked) walletLinked.style.display = 'none';
+            }
+        }
+        
+        // Show wallet connect option after login
+        function showWalletConnectOption() {
+            // Check if wallet is already connected
+            const savedWallet = storage.getItem('shackerWallet');
+            if (savedWallet) {
+                updateWalletStatusDisplay(savedWallet);
+            }
+        }
+        
+        // Link wallet to existing account
+        async function linkWalletToAccount() {
+            if (!initWeb3()) {
+                alert('Please install MetaMask to connect your wallet!');
+                return;
+            }
+            
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                
+                if (accounts.length > 0) {
+                    const walletAddress = accounts[0];
+                    
+                    // Save wallet info locally
+                    updateWalletStatusDisplay(walletAddress);
+                    
+                    // Optional: Send wallet info to server to link with account
+                    // This would require updating the server API
+                    console.log('Wallet linked to account:', walletAddress);
+                    console.log('Username:', currentUsername);
+                    
+                    // Show success message
+                    const syncStatus = document.getElementById('syncStatus');
+                    if (syncStatus) {
+                        syncStatus.textContent = '✅ Wallet connected successfully!';
+                        syncStatus.style.color = '#00ff88';
+                        setTimeout(() => {
+                            syncStatus.style.display = 'none';
+                        }, 3000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+                alert('Failed to connect wallet. Please try again.');
             }
         }
         
