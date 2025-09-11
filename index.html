@@ -3,13 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shacker Game - v2.0 NFT Edition</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <!-- Web3 Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <title>Shacker Game - Secure Wallet System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -73,80 +67,26 @@
         }
         
         #userInfo {
-            position: fixed !important;  /* Fixed to stay visible */
+            position: absolute;
             bottom: 20px;
             left: 20px;
             font-size: 14px;
             color: #00ffcc;
-            background: rgba(0,0,0,0.95);
-            padding: 15px 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 15px;
             border-radius: 10px;
-            z-index: 10000 !important;  /* Very high z-index */
+            z-index: 100;
             pointer-events: auto;
-            min-width: 250px;
-            border: 2px solid #f6851b;  /* Orange border */
-            box-shadow: 0 0 20px rgba(246, 133, 27, 0.5);  /* Glow */
         }
         
         #userInfo button {
-            margin: 5px;
-            padding: 8px 15px;
+            margin-left: 10px;
+            padding: 5px 10px;
             background: #ff0088;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
-        }
-        
-        #userInfo .wallet-status {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            font-size: 12px;
-        }
-        
-        .link-wallet-btn {
-            background: linear-gradient(135deg, #f6851b, #e2761b) !important;
-            width: 100%;
-            margin-top: 10px !important;
-        }
-        
-        #connectWalletSection {
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(246, 133, 27, 0.1);
-            border: 2px solid #f6851b;
-            border-radius: 10px;
-        }
-        
-        #connectWalletSection button {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(135deg, #f6851b, #e2761b);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        
-        #connectWalletSection button:hover {
-            background: linear-gradient(135deg, #ff9933, #f6851b);
-        }
-        
-        #nameInput {
-            padding: 15px;
-            font-size: 18px;
-            border: 2px solid #00ffcc;
-            border-radius: 10px;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            text-align: center;
-            width: 300px;
-            max-width: 80%;
-            margin-bottom: 20px;
         }
         
         /* Login Screen Styles */
@@ -174,10 +114,12 @@
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            width: 400px;
+            max-width: 90%;
         }
         
         .auth-input {
-            width: 300px;
+            width: 100%;
             padding: 15px;
             margin: 10px 0;
             background: rgba(0,0,0,0.5);
@@ -193,6 +135,48 @@
             box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
         
+        .wallet-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 10px;
+            border: 1px solid #00ffcc;
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-address {
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff88;
+            word-break: break-all;
+        }
+        
+        .wallet-warning {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .wallet-success {
+            color: #51cf66;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(81, 207, 102, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        
         .auth-buttons {
             display: flex;
             gap: 10px;
@@ -200,39 +184,86 @@
         }
         
         .btn {
-            padding: 20px 40px;
-            font-size: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
             background: #00ffcc;
             color: #000;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
-            margin: 10px;
-            transition: transform 0.2s;
+            flex: 1;
+            transition: all 0.3s;
         }
         
         .btn:hover {
-            transform: scale(1.05);
+            background: #00ff88;
+            transform: translateY(-2px);
         }
         
         .btn-secondary {
-            background: #ff00aa;
+            background: #666;
             color: white;
         }
         
-        .error-message {
-            color: #ff4444;
+        .btn-secondary:hover {
+            background: #888;
+        }
+        
+        .btn-wallet {
+            background: #ff9500;
+            color: white;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .btn-wallet:hover {
+            background: #ffb143;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 14px;
             margin-top: 10px;
             text-align: center;
         }
         
-        .success-message {
-            color: #00ff88;
+        .success-msg {
+            color: #51cf66;
+            font-size: 14px;
             margin-top: 10px;
             text-align: center;
         }
         
+        .form-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #888;
+            border: 2px solid #333;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: rgba(0, 255, 204, 0.2);
+            color: #00ffcc;
+            border-color: #00ffcc;
+        }
+        
+        /* Start Screen */
         #startScreen {
             position: absolute;
             width: 100%;
@@ -248,197 +279,58 @@
         #startScreen h1 {
             font-size: 60px;
             color: #00ffcc;
+            margin-bottom: 20px;
+        }
+        
+        #welcomeUsername {
+            font-size: 24px;
+            color: #ffd700;
             margin-bottom: 30px;
         }
         
-        #leaderboard {
-            background: rgba(0,0,0,0.8) !important;
-            padding: 25px !important;
-            border-radius: 15px !important;
-            margin: 20px !important;
-            width: 400px !important;
-            height: 380px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
-            overflow: visible !important;
-        }
-        
-        #leaderboard h3 {
-            color: #ffd700;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        
-        #syncStatus {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: #00ff88;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            z-index: 200;
-        }
-        
-        .score-entry {
-            padding: 10px 15px;
-            margin: 8px 0;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 18px;
-            height: 45px;
-        }
-        
-        .score-entry span:first-child {
-            display: flex;
-            align-items: center;
-            min-width: 200px;
-        }
-        
-        .score-entry span:last-child {
-            font-weight: bold;
-            color: #00ffcc;
-            min-width: 80px;
-            text-align: right;
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 15px;
-            min-height: 40px;
-        }
-        
-        .page-btn {
-            padding: 8px 16px;
-            background: rgba(102,126,234,0.3);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .page-btn:hover {
-            background: rgba(102,126,234,0.5);
-        }
-        
-        .page-btn.active {
-            background: #667eea;
-        }
-        
-        /* Wallet Styles */
-        .wallet-connect-btn {
-            background: linear-gradient(135deg, #f6851b, #e2761b);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .wallet-connect-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(246, 133, 27, 0.4);
-        }
-        
-        .wallet-or {
-            color: #666;
-            margin: 15px 0;
-            text-align: center;
-            position: relative;
-        }
-        
-        .wallet-or::before,
-        .wallet-or::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 45%;
-            height: 1px;
-            background: #333;
-        }
-        
-        .wallet-or::before { left: 0; }
-        .wallet-or::after { right: 0; }
-        
-        .wallet-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: none;
-            z-index: 200;
-        }
-        
-        .wallet-badge.active {
-            display: block;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(246,133,27,0.7); }
-            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(246,133,27,0.3); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(246,133,27,0); }
-        }
-        
-        .spinner {
-            border: 3px solid rgba(0,255,204,0.1);
-            border-top: 3px solid #00ffcc;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-            display: inline-block;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
+        /* Game Over Screen */
         #gameOverScreen {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.98);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
-            color: white;
-        }
-        
-        #gameOverScreen h2 {
-            font-size: 48px;
-            color: #ff0088;
-            margin-bottom: 20px;
         }
         
         #finalScore {
-            font-size: 32px;
-            color: #00ffcc;
-            margin-bottom: 20px;
+            font-size: 48px;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+        
+        #leaderboard {
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            min-width: 400px;
+            max-width: 90%;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .score-entry.highlight {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
         }
     </style>
 </head>
@@ -449,363 +341,253 @@
         <div id="ui">
             <div id="score">Score: 0</div>
             <div id="level">Level: 1</div>
-            <div id="gamesLeft" style="display: none;">🎮 Games left: Loading...</div>
+            <div id="gamesLeft">🎮 Games left: 10/10</div>
         </div>
         
         <div id="userInfo" style="display: none;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span>👤 <span id="usernameDisplay">Not logged in</span></span>
-                <button onclick="logout()">Logout</button>
-            </div>
-            <div class="wallet-status">
-                <div id="walletNotLinkedInfo" style="display: block;">
-                    <span style="color: #ffd700;">💎 No wallet linked</span>
-                    <button class="link-wallet-btn" onclick="linkWalletToAccount()">
-                        Link NFT Wallet
-                    </button>
-                </div>
-                <div id="walletLinkedInfo" style="display: none;">
-                    <span style="color: #00ff88;">✅ Wallet linked</span>
-                    <div style="font-size: 10px; color: #888; margin-top: 5px;">
-                        <span id="linkedWalletDisplay"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="syncStatus">🔄 Checking...</div>
-        
-        <!-- Wallet Badge -->
-        <div id="walletBadge" class="wallet-badge">
-            🦊 <span id="walletAddressDisplay"></span>
+            <span>Playing as: <strong id="usernameDisplay"></strong></span>
+            <span id="walletDisplay" style="margin-left: 10px; font-size: 12px;"></span>
+            <button onclick="logout()">Logout</button>
         </div>
         
         <!-- LOGIN SCREEN -->
         <div id="loginScreen">
-            <h1>🎮 SHACKER LOGIN</h1>
+            <h1>🎮 SHACKER GAME</h1>
             
-            <div id="loginForm" class="auth-form">
-                <!-- Simple login message -->
-                <div style="text-align: center; margin: 20px 0;">
-                    <p style="color: #ffd700; font-size: 16px; margin-bottom: 10px;">
-                        📧 Create an account to play
-                    </p>
-                    <p style="color: #888; font-size: 12px;">
-                        NFT holders: Link your wallet after login to appear on leaderboard
-                    </p>
+            <div class="auth-form">
+                <div class="form-tabs">
+                    <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                    <button class="tab-btn" onclick="switchTab('register')">Register</button>
                 </div>
                 
-                <input type="text" id="loginUsername" class="auth-input" placeholder="Username" maxlength="20">
-                <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
-                
-                <div class="auth-buttons">
-                    <button class="btn" onclick="login()">LOGIN</button>
-                    <button class="btn btn-secondary" onclick="showRegister()">REGISTER</button>
+                <!-- LOGIN FORM -->
+                <div id="loginForm">
+                    <input type="text" id="loginUsername" class="auth-input" placeholder="Username" />
+                    <input type="password" id="loginPassword" class="auth-input" placeholder="Password" />
+                    
+                    <div class="wallet-section">
+                        <div class="wallet-status">
+                            <span>🦊 MetaMask:</span>
+                            <span id="walletStatusLogin">Not connected</span>
+                        </div>
+                        <button class="btn btn-wallet" onclick="connectWallet('login')">Connect Wallet (Optional)</button>
+                        <div class="wallet-address" id="walletAddressLogin"></div>
+                    </div>
+                    
+                    <div class="auth-buttons">
+                        <button class="btn" onclick="login()">LOGIN</button>
+                    </div>
+                    <div class="error-msg" id="loginError"></div>
                 </div>
                 
-                <div id="loginError" class="error-message"></div>
-            </div>
-            
-            <div id="registerForm" class="auth-form" style="display: none;">
-                <input type="text" id="regUsername" class="auth-input" placeholder="Username" maxlength="20">
-                <input type="email" id="regEmail" class="auth-input" placeholder="Email">
-                <input type="password" id="regPassword" class="auth-input" placeholder="Password (min 6 chars)">
-                
-                <div style="margin: 15px 0; padding: 10px; background: rgba(255,215,0,0.1); border: 1px solid #ffd700; border-radius: 10px;">
-                    <p style="color: #ffd700; font-size: 14px; text-align: center;">
-                        💡 You can connect your wallet after creating your account
-                    </p>
+                <!-- REGISTER FORM -->
+                <div id="registerForm" style="display: none;">
+                    <input type="text" id="regUsername" class="auth-input" placeholder="Choose a username" />
+                    <input type="email" id="regEmail" class="auth-input" placeholder="Email address" />
+                    <input type="password" id="regPassword" class="auth-input" placeholder="Password (min 6 chars)" />
+                    
+                    <div class="wallet-section">
+                        <div class="wallet-status">
+                            <span>🦊 MetaMask:</span>
+                            <span id="walletStatusReg">Not connected</span>
+                        </div>
+                        <button class="btn btn-wallet" onclick="connectWallet('register')">Connect Wallet (Optional)</button>
+                        <div class="wallet-address" id="walletAddressReg"></div>
+                        <div class="wallet-warning" id="walletWarning"></div>
+                        <div class="wallet-success" id="walletSuccess"></div>
+                    </div>
+                    
+                    <div class="auth-buttons">
+                        <button class="btn" onclick="register()" id="registerBtn">CREATE ACCOUNT</button>
+                    </div>
+                    <div class="error-msg" id="registerError"></div>
+                    <div class="success-msg" id="registerSuccess"></div>
                 </div>
-                
-                <div class="auth-buttons">
-                    <button class="btn btn-secondary" onclick="register()">CREATE ACCOUNT</button>
-                    <button class="btn" onclick="showLogin()">BACK</button>
-                </div>
-                
-                <div id="registerError" class="error-message"></div>
-                <div id="registerSuccess" class="success-message"></div>
             </div>
         </div>
         
         <!-- START SCREEN -->
         <div id="startScreen">
-            <h1>SHACKER</h1>
-            <div id="welcomeMessage" style="color: #ffd700; font-size: 24px; margin-bottom: 20px;">
-                Welcome, <span id="welcomeUsername"></span>!
-            </div>
+            <h1>🎮 SHACKER</h1>
+            <div id="welcomeUsername">Welcome!</div>
             <button class="btn" id="startBtn" onclick="startGame()">START GAME</button>
-            <button class="btn" id="viewScoresBtn" onclick="viewScores()" style="background: linear-gradient(135deg, #ffd700, #ffa500);">🏆 VIEW SCORES</button>
+            <button class="btn btn-secondary" onclick="loadScores()">VIEW LEADERBOARD</button>
         </div>
         
         <!-- GAME OVER SCREEN -->
         <div id="gameOverScreen">
-            <h2 style="font-size: 48px; color: #ff0088; margin-bottom: 10px;">GAME OVER</h2>
-            <div id="finalScore" style="font-size: 32px; color: #00ffcc; margin-bottom: 20px;">Score: 0</div>
-            <h3 style="font-size: 42px; color: #ffd700; margin-bottom: 20px;">🏆 NFT HOLDERS LEADERBOARD</h3>
-            <div style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 320px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div id="scoresList" style="height: 260px;"></div>
-                <div id="gameOverPagination" class="pagination" style="margin-top: 10px;"></div>
+            <h1 style="color: #ff0088;">GAME OVER</h1>
+            <div id="finalScore">Score: 0</div>
+            <div id="leaderboard"></div>
+            <div class="auth-buttons">
+                <button class="btn" onclick="startGame()">PLAY AGAIN</button>
+                <button class="btn btn-secondary" onclick="backToMenu()">MAIN MENU</button>
             </div>
-            <button class="btn" id="restartBtn" onclick="restartGame()">PLAY AGAIN</button>
-        </div>
-        
-        <!-- SCORES VIEW SCREEN -->
-        <div id="scoresViewScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(26,26,46,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white;">
-            <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 NFT HOLDERS LEADERBOARD</h2>
-            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px; width: 400px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div id="scoresList2" style="height: 320px;"></div>
-                <div id="pagination" class="pagination"></div>
-            </div>
-            <button class="btn" onclick="document.getElementById('scoresViewScreen').style.display='none'; document.getElementById('startScreen').style.display='flex';">BACK TO MENU</button>
         </div>
     </div>
     
     <script>
-        // SECURE PROXY VERSION - API Key hidden on server
+        // CONFIG
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:10000'
+            : 'https://shacker-proxy.onrender.com';
         
-        // API endpoint - Using Render proxy
-        var API_URL = 'https://shacker-proxy.onrender.com';
+        // AUTH VARIABLES
+        let authToken = localStorage.getItem('shackerToken');
+        let currentUsername = localStorage.getItem('shackerUsername');
+        let connectedWallet = null;
+        let gamesLeft = 10;
         
-        // Detect sandbox environment FIRST
-        var isSandboxed = false;
-        try {
-            var test = window.localStorage;
-            test.setItem('test', '1');
-            test.removeItem('test');
-        } catch (e) {
-            isSandboxed = true;
-            console.log('⚠️ Sandboxed environment detected - using memory storage');
+        // GAME VARIABLES
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameRunning = false;
+        let score = 0;
+        let level = 1;
+        let player = { x: 0, y: 0, size: 20, trail: [] };
+        let enemies = [];
+        let collectibles = [];
+        let particles = [];
+        
+        // WALLET FUNCTIONS
+        async function connectWallet(mode) {
+            if (typeof window.ethereum === 'undefined') {
+                alert('Please install MetaMask to connect your wallet!');
+                return;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                connectedWallet = accounts[0];
+                
+                if (mode === 'register') {
+                    document.getElementById('walletStatusReg').textContent = 'Connected';
+                    document.getElementById('walletAddressReg').textContent = connectedWallet;
+                    
+                    // Check if wallet is already used
+                    const response = await fetch(API_URL + '/check-wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ walletAddress: connectedWallet })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.isAvailable) {
+                        document.getElementById('walletWarning').style.display = 'block';
+                        document.getElementById('walletWarning').textContent = data.message;
+                        document.getElementById('walletSuccess').style.display = 'none';
+                        document.getElementById('registerBtn').disabled = true;
+                    } else {
+                        document.getElementById('walletSuccess').style.display = 'block';
+                        document.getElementById('walletSuccess').textContent = '✅ Wallet ready to be linked to your account';
+                        document.getElementById('walletWarning').style.display = 'none';
+                        document.getElementById('registerBtn').disabled = false;
+                    }
+                } else {
+                    document.getElementById('walletStatusLogin').textContent = 'Connected';
+                    document.getElementById('walletAddressLogin').textContent = connectedWallet;
+                }
+                
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                alert('Failed to connect wallet');
+            }
         }
         
-        // Auth variables - Use memory storage for sandboxed iframes
-        var authToken = null;
-        var currentUsername = null;
-        var gamesLeft = 0;
-        var playerName = '';
-        
-        // Safe storage wrapper that works in sandboxed iframes
-        var storage = {
-            getItem: function(key) {
-                if (isSandboxed) {
-                    return window[key + '_memory'];
+        // Listen for account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    connectedWallet = null;
+                    document.getElementById('walletStatusReg').textContent = 'Not connected';
+                    document.getElementById('walletStatusLogin').textContent = 'Not connected';
+                    document.getElementById('walletAddressReg').textContent = '';
+                    document.getElementById('walletAddressLogin').textContent = '';
+                } else if (accounts[0] !== connectedWallet) {
+                    connectedWallet = accounts[0];
+                    connectWallet(document.getElementById('loginForm').style.display === 'none' ? 'register' : 'login');
                 }
-                try {
-                    return window.localStorage.getItem(key);
-                } catch (e) {
-                    return window[key + '_memory'];
-                }
-            },
-            setItem: function(key, value) {
-                if (isSandboxed) {
-                    window[key + '_memory'] = value;
-                    return;
-                }
-                try {
-                    window.localStorage.setItem(key, value);
-                } catch (e) {
-                    window[key + '_memory'] = value;
-                }
-            },
-            removeItem: function(key) {
-                if (isSandboxed) {
-                    window[key + '_memory'] = null;
-                    return;
-                }
-                try {
-                    window.localStorage.removeItem(key);
-                } catch (e) {
-                    window[key + '_memory'] = null;
-                }
-            }
-        };
+            });
+        }
         
-        // Try to load saved credentials
-        authToken = storage.getItem('shackerToken');
-        currentUsername = storage.getItem('shackerUsername');
-        
-        // Game variables
-        var canvas = null;
-        var ctx = null;
-        var gameRunning = false;
-        var score = 0;
-        var level = 1;
-        var globalScores = [];
-        var currentPage = 1;
-        var scoresPerPage = 5;
-        
-        // Player
-        var player = {
-            x: 0,
-            y: 0,
-            size: 20,
-            color: '#00ffcc',
-            trail: []
-        };
-        
-        // Enemies
-        var enemies = [];
-        var collectibles = [];
-        var particles = [];
-        
-        // Initialize when page loads
-        window.onload = function() {
-            console.log('🔒 Shacker v2.2 - NFT Edition with Web3 - ' + new Date().toISOString());
-            
-            // Initialize Web3 if available
-            if (initWeb3()) {
-                console.log('✅ Web3 initialized successfully');
+        function switchTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.querySelectorAll('.tab-btn')[1].classList.remove('active');
             } else {
-                console.log('⚠️ Web3 not available - wallet features disabled');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
             }
-            
-            // FORCE REMOVE any name input field (cache fix)
-            const oldNameInput = document.getElementById('nameInput');
-            if (oldNameInput) {
-                oldNameInput.remove();
-                console.log('Removed cached name input field');
-            }
-            
-            canvas = document.getElementById('gameCanvas');
-            ctx = canvas.getContext('2d');
-            
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            // Detect if on mobile or in iframe (OpenSea)
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const isInIframe = window.parent !== window;
-            
-            // Load saved wallet address
-            connectedWallet = storage.getItem('shackerWallet');
-            if (connectedWallet) {
-                console.log('📝 Loaded saved wallet:', connectedWallet);
-            }
-            
-            if (authToken && currentUsername) {
-                checkAuth();
-                // Show wallet connect option after a short delay to ensure UI is ready
-                setTimeout(() => {
-                    console.log('Checking wallet status on page load...');
-                    showWalletConnectOption();
-                }, 1000);
-            } else {
-                // ALWAYS show login screen - auth is required
-                showLoginScreen();
-            }
-            
-            loadScores();
-            
-            // Make sure buttons are properly connected
-            const startBtn = document.getElementById('startBtn');
-            const restartBtn = document.getElementById('restartBtn');
-            const viewScoresBtn = document.getElementById('viewScoresBtn');
-            
-            if (startBtn) startBtn.onclick = startGame;
-            if (restartBtn) restartBtn.onclick = restartGame;
-            if (viewScoresBtn) viewScoresBtn.onclick = viewScores;
-            
-            console.log('Buttons connected:', !!startBtn, !!restartBtn, !!viewScoresBtn);
-            
-            setupControls();
-            
-            console.log('Game ready with secure proxy!');
-        };
+        }
         
-        // AUTH FUNCTIONS
         function showLoginScreen() {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
         }
         
-        function showRegister() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('registerError').textContent = '';
-        }
-        
-        function showLogin() {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginError').textContent = '';
-        }
-        
-        function login() {
-            var username = document.getElementById('loginUsername').value;
-            var password = document.getElementById('loginPassword').value;
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
             
             if (!username || !password) {
                 document.getElementById('loginError').textContent = 'Please fill all fields';
                 return;
             }
             
-            fetch(API_URL + '/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Server error: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
+            const loginData = { username, password };
+            if (connectedWallet) {
+                loginData.walletAddress = connectedWallet;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                
                 if (data.success) {
                     authToken = data.token;
                     currentUsername = data.username;
                     gamesLeft = data.gamesLeft;
                     
-                    storage.setItem('shackerToken', authToken);
-                    storage.setItem('shackerUsername', currentUsername);
+                    localStorage.setItem('shackerToken', authToken);
+                    localStorage.setItem('shackerUsername', currentUsername);
                     
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('userInfo').style.display = 'block'; // MUST BE VISIBLE for wallet link!
+                    document.getElementById('userInfo').style.display = 'block';
                     document.getElementById('usernameDisplay').textContent = currentUsername;
-                    document.getElementById('welcomeUsername').textContent = currentUsername;
-                    document.getElementById('welcomeMessage').style.display = 'block';
+                    document.getElementById('welcomeUsername').textContent = `Welcome, ${currentUsername}!`;
+                    
+                    if (connectedWallet) {
+                        document.getElementById('walletDisplay').textContent = `🦊 ${connectedWallet.slice(0,6)}...${connectedWallet.slice(-4)}`;
+                    }
+                    
                     updateGamesLeftDisplay();
-                    
-                    // Show wallet connect option after login
-                    showWalletConnectOption();
-                    
                     loadScores();
                 } else {
                     document.getElementById('loginError').textContent = data.error || 'Login failed';
                 }
-            })
-            .catch(error => {
-                console.error('Login error details:', error);
-                console.error('API URL used:', API_URL + '/login');
-                document.getElementById('loginError').textContent = 'Connection error: ' + error.message;
-            });
-        }
-        
-        // Web3 variables
-        var web3 = null;
-        var connectedWallet = null;
-        
-        // Initialize Web3
-        function initWeb3() {
-            if (typeof window.ethereum !== 'undefined') {
-                web3 = new Web3(window.ethereum);
-                return true;
-            } else if (typeof window.web3 !== 'undefined') {
-                web3 = new Web3(window.web3.currentProvider);
-                return true;
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Connection error';
+                console.error('Login error:', error);
             }
-            return false;
         }
         
-        
-        // Standard register function without wallet
-        function register() {
-            var username = document.getElementById('regUsername').value;
-            var email = document.getElementById('regEmail').value;
-            var password = document.getElementById('regPassword').value;
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
             
             if (!username || !email || !password) {
                 document.getElementById('registerError').textContent = 'Please fill all fields';
@@ -817,27 +599,27 @@
                 return;
             }
             
-            fetch(API_URL + '/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, email, password })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Server error: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
+            const registerData = { username, email, password };
+            if (connectedWallet) {
+                registerData.walletAddress = connectedWallet;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(registerData)
+                });
+                
+                const data = await response.json();
+                
                 if (data.success) {
                     authToken = data.token;
                     currentUsername = data.username;
                     gamesLeft = data.gamesLeft;
                     
-                    storage.setItem('shackerToken', authToken);
-                    storage.setItem('shackerUsername', currentUsername);
+                    localStorage.setItem('shackerToken', authToken);
+                    localStorage.setItem('shackerUsername', currentUsername);
                     
                     document.getElementById('registerSuccess').textContent = 'Account created! Welcome!';
                     
@@ -846,136 +628,43 @@
                         document.getElementById('startScreen').style.display = 'flex';
                         document.getElementById('userInfo').style.display = 'block';
                         document.getElementById('usernameDisplay').textContent = currentUsername;
-                        document.getElementById('welcomeUsername').textContent = currentUsername;
-                        document.getElementById('welcomeMessage').style.display = 'block';
+                        document.getElementById('welcomeUsername').textContent = `Welcome, ${currentUsername}!`;
+                        
+                        if (connectedWallet) {
+                            document.getElementById('walletDisplay').textContent = `🦊 ${connectedWallet.slice(0,6)}...${connectedWallet.slice(-4)}`;
+                        }
+                        
                         updateGamesLeftDisplay();
-                        
-                        // Show wallet connect button after registration
-                        showWalletConnectOption();
-                        
-                        loadScores();
                     }, 1500);
                 } else {
                     document.getElementById('registerError').textContent = data.error || 'Registration failed';
                 }
-            })
-            .catch(error => {
-                console.error('Registration error:', error);
-                document.getElementById('registerError').textContent = 'Connection error: ' + error.message;
-            });
-        }
-        
-        // Update wallet status display
-        function updateWalletStatusDisplay(address) {
-            const walletNotLinked = document.getElementById('walletNotLinkedInfo');
-            const walletLinked = document.getElementById('walletLinkedInfo');
-            const walletDisplay = document.getElementById('linkedWalletDisplay');
-            
-            if (address) {
-                // Hide not linked, show linked
-                if (walletNotLinked) walletNotLinked.style.display = 'none';
-                if (walletLinked) walletLinked.style.display = 'block';
-                if (walletDisplay) {
-                    walletDisplay.textContent = address.substring(0, 6) + '...' + address.substring(address.length - 4);
-                }
-                connectedWallet = address;
-                storage.setItem('shackerWallet', address);
-            } else {
-                // Show not linked, hide linked
-                if (walletNotLinked) walletNotLinked.style.display = 'block';
-                if (walletLinked) walletLinked.style.display = 'none';
+            } catch (error) {
+                document.getElementById('registerError').textContent = 'Connection error';
+                console.error('Register error:', error);
             }
         }
         
-        // Show wallet connect option after login
-        function showWalletConnectOption() {
-            // Check if wallet is already connected
-            const savedWallet = storage.getItem('shackerWallet');
-            if (savedWallet) {
-                updateWalletStatusDisplay(savedWallet);
-            }
-        }
-        
-        // Link wallet to existing account
-        async function linkWalletToAccount() {
-            if (!initWeb3()) {
-                alert('Please install MetaMask to connect your wallet!');
+        async function checkAuth() {
+            if (!authToken) {
+                showLoginScreen();
                 return;
             }
             
             try {
-                // Request account access
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const response = await fetch(API_URL + '/can-play', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
                 
-                if (accounts.length > 0) {
-                    const walletAddress = accounts[0];
-                    
-                    // Save wallet info locally
-                    updateWalletStatusDisplay(walletAddress);
-                    
-                    // Optional: Send wallet info to server to link with account
-                    // This would require updating the server API
-                    console.log('Wallet linked to account:', walletAddress);
-                    console.log('Username:', currentUsername);
-                    
-                    // Show success message
-                    const syncStatus = document.getElementById('syncStatus');
-                    if (syncStatus) {
-                        syncStatus.textContent = '✅ Wallet connected successfully!';
-                        syncStatus.style.color = '#00ff88';
-                        setTimeout(() => {
-                            syncStatus.style.display = 'none';
-                        }, 3000);
-                    }
-                }
-            } catch (error) {
-                console.error('Error connecting wallet:', error);
-                alert('Failed to connect wallet. Please try again.');
-            }
-        }
-        
-        function checkAuth() {
-            fetch(API_URL + '/profile', {
-                headers: {
-                    'Authorization': 'Bearer ' + authToken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.username) {
-                    currentUsername = data.username;
-                    gamesLeft = data.gamesLeft || 10; // Default to 10 if not set
-                    
+                const data = await response.json();
+                
+                if (data.canPlay !== undefined) {
+                    gamesLeft = data.gamesLeft;
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('startScreen').style.display = 'flex';
-                    document.getElementById('userInfo').style.display = 'block'; // MUST BE VISIBLE for wallet link!
+                    document.getElementById('userInfo').style.display = 'block';
                     document.getElementById('usernameDisplay').textContent = currentUsername;
-                    document.getElementById('welcomeUsername').textContent = currentUsername;
-                    document.getElementById('welcomeMessage').style.display = 'block';
-                    
-                    // Use wallet status directly from profile data (no need for another API call)
-                    if (data.wallet_address) {
-                        // Wallet already linked
-                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                        document.getElementById('walletLinkedInfo').style.display = 'block';
-                        document.getElementById('linkedWalletDisplay').textContent = 
-                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
-                        if (document.getElementById('walletBadge')) {
-                            document.getElementById('walletBadge').classList.add('active');
-                        }
-                        if (document.getElementById('walletAddressDisplay')) {
-                            document.getElementById('walletAddressDisplay').textContent = 
-                                data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
-                        }
-                    } else {
-                        // No wallet linked - show link button
-                        document.getElementById('walletNotLinkedInfo').style.display = 'block';
-                        document.getElementById('walletLinkedInfo').style.display = 'none';
-                        if (document.getElementById('walletBadge')) {
-                            document.getElementById('walletBadge').classList.remove('active');
-                        }
-                    }
-                    
+                    document.getElementById('welcomeUsername').textContent = `Welcome, ${currentUsername}!`;
                     updateGamesLeftDisplay();
                     
                     if (!data.canPlay) {
@@ -987,49 +676,39 @@
                 } else {
                     showLoginScreen();
                 }
-            })
-            .catch(() => {
+            } catch {
                 showLoginScreen();
-            });
+            }
         }
         
         function logout() {
-            storage.removeItem('shackerToken');
-            storage.removeItem('shackerUsername');
+            localStorage.removeItem('shackerToken');
+            localStorage.removeItem('shackerUsername');
             authToken = null;
             currentUsername = null;
+            connectedWallet = null;
             showLoginScreen();
         }
         
         function updateGamesLeftDisplay() {
-            document.getElementById('gamesLeft').textContent = '🎮 Games left: ' + gamesLeft + '/10';
+            document.getElementById('gamesLeft').textContent = `🎮 Games left: ${gamesLeft}/10`;
+        }
+        
+        // GAME FUNCTIONS
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
         
         function startGame() {
-            console.log('Starting game... Auth:', authToken, 'Games left:', gamesLeft);
-            
-            // Only block if we HAVE auth AND explicitly no games left
-            if (authToken && typeof gamesLeft === 'number' && gamesLeft <= 0) {
+            if (gamesLeft <= 0) {
                 alert('No games left today! Come back tomorrow!');
                 return;
             }
             
-            console.log('Game starting successfully! Initializing...');
-            
-            // Always use currentUsername when authenticated
-            playerName = currentUsername || 'Player';
-            
-            // Hide screens
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
             
-            // HIDE USER INFO PANEL DURING GAME (but it should be visible on start screen!)
-            document.getElementById('userInfo').style.display = 'none';
-            
-            // Make canvas visible
-            canvas.style.display = 'block';
-            
-            // Reset game state
             score = 0;
             level = 1;
             enemies = [];
@@ -1037,103 +716,52 @@
             particles = [];
             player.trail = [];
             
-            // Set canvas size
-            if (canvas.width === 0 || canvas.height === 0) {
-                console.log('Resizing canvas...');
-                canvas.width = window.innerWidth || 800;
-                canvas.height = window.innerHeight || 600;
-            }
-            
             player.x = canvas.width / 2;
             player.y = canvas.height / 2;
-            player.size = 20;
             
-            for (var i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i++) {
                 spawnEnemy();
             }
             
-            for (var j = 0; j < 3; j++) {
+            for (let j = 0; j < 3; j++) {
                 spawnCollectible();
             }
             
             gameRunning = true;
-            console.log('Game running set to true, starting game loop...');
-            try {
-                gameLoop();
-            } catch (error) {
-                console.error('Error starting game loop:', error);
-                alert('Error starting game: ' + error.message);
-            }
-            
-            if (!window.enemySpawnInterval) {
-                window.enemySpawnInterval = setInterval(function() {
-                    if (gameRunning && enemies.length < 10 + level) {
-                        spawnEnemy();
-                    }
-                }, 2000);
-            }
-        }
-        
-        function setupControls() {
-            canvas.onmousemove = function(e) {
-                if (gameRunning) {
-                    var rect = canvas.getBoundingClientRect();
-                    var scaleX = canvas.width / rect.width;
-                    var scaleY = canvas.height / rect.height;
-                    
-                    player.x = (e.clientX - rect.left) * scaleX;
-                    player.y = (e.clientY - rect.top) * scaleY;
-                }
-            };
-            
-            canvas.ontouchmove = function(e) {
-                if (gameRunning && e.touches[0]) {
-                    e.preventDefault();
-                    var rect = canvas.getBoundingClientRect();
-                    var scaleX = canvas.width / rect.width;
-                    var scaleY = canvas.height / rect.height;
-                    
-                    player.x = (e.touches[0].clientX - rect.left) * scaleX;
-                    player.y = (e.touches[0].clientY - rect.top) * scaleY;
-                }
-            };
+            gameLoop();
         }
         
         function spawnEnemy() {
-            var side = Math.floor(Math.random() * 4);
-            var enemy = {
-                x: 0,
-                y: 0,
-                vx: 0,
-                vy: 0,
+            const side = Math.floor(Math.random() * 4);
+            const enemy = {
+                x: 0, y: 0, vx: 0, vy: 0,
                 size: 15 + Math.random() * 20,
-                color: 'hsl(' + Math.floor(Math.random() * 60) + ', 100%, 50%)'
+                color: `hsl(${Math.floor(Math.random() * 60)}, 100%, 50%)`
             };
+            
+            const speed = (1 + level * 0.2);
             
             if (side === 0) {
                 enemy.x = Math.random() * canvas.width;
-                enemy.y = enemy.size;
-                enemy.vx = (Math.random() - 0.5) * 2;
-                enemy.vy = Math.random() * 2 + 1;
+                enemy.y = 0;
+                enemy.vx = (Math.random() - 0.5) * 2 * speed;
+                enemy.vy = (Math.random() * 2 + 1) * speed;
             } else if (side === 1) {
-                enemy.x = canvas.width - enemy.size;
+                enemy.x = canvas.width;
                 enemy.y = Math.random() * canvas.height;
-                enemy.vx = -(Math.random() * 2 + 1);
-                enemy.vy = (Math.random() - 0.5) * 2;
+                enemy.vx = -(Math.random() * 2 + 1) * speed;
+                enemy.vy = (Math.random() - 0.5) * 2 * speed;
             } else if (side === 2) {
                 enemy.x = Math.random() * canvas.width;
-                enemy.y = canvas.height - enemy.size;
-                enemy.vx = (Math.random() - 0.5) * 2;
-                enemy.vy = -(Math.random() * 2 + 1);
+                enemy.y = canvas.height;
+                enemy.vx = (Math.random() - 0.5) * 2 * speed;
+                enemy.vy = -(Math.random() * 2 + 1) * speed;
             } else {
-                enemy.x = enemy.size;
+                enemy.x = 0;
                 enemy.y = Math.random() * canvas.height;
-                enemy.vx = Math.random() * 2 + 1;
-                enemy.vy = (Math.random() - 0.5) * 2;
+                enemy.vx = (Math.random() * 2 + 1) * speed;
+                enemy.vy = (Math.random() - 0.5) * 2 * speed;
             }
-            
-            enemy.vx *= (1 + level * 0.2);
-            enemy.vy *= (1 + level * 0.2);
             
             enemies.push(enemy);
         }
@@ -1143,913 +771,251 @@
                 x: Math.random() * (canvas.width - 40) + 20,
                 y: Math.random() * (canvas.height - 40) + 20,
                 size: 10,
-                color: '#ffff00',
-                value: 100 * level
+                collected: false
             });
         }
         
         function createParticles(x, y, color) {
-            for (var i = 0; i < 5; i++) {
+            for (let i = 0; i < 10; i++) {
                 particles.push({
                     x: x,
                     y: y,
                     vx: (Math.random() - 0.5) * 10,
                     vy: (Math.random() - 0.5) * 10,
-                    size: Math.random() * 3 + 1,
+                    size: Math.random() * 5 + 2,
                     color: color,
                     life: 1
                 });
             }
         }
         
-        function update() {
-            player.trail.push({x: player.x, y: player.y});
+        function updateGame() {
+            if (!gameRunning) return;
+            
+            // Update player trail
+            player.trail.push({ x: player.x, y: player.y });
             if (player.trail.length > 20) {
                 player.trail.shift();
             }
             
-            for (var i = enemies.length - 1; i >= 0; i--) {
-                var enemy = enemies[i];
-                
+            // Update enemies
+            enemies.forEach(enemy => {
                 enemy.x += enemy.vx;
                 enemy.y += enemy.vy;
                 
-                if (enemy.x <= enemy.size || enemy.x >= canvas.width - enemy.size) {
-                    enemy.vx = -enemy.vx;
-                    enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
-                }
-                if (enemy.y <= enemy.size || enemy.y >= canvas.height - enemy.size) {
-                    enemy.vy = -enemy.vy;
-                    enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
-                }
+                // Check collision with player
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
                 
-                enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
-                enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
-                
-                if (gameRunning && player.x && player.y) {
-                    var dx = enemy.x - player.x;
-                    var dy = enemy.y - player.y;
-                    var dist = Math.sqrt(dx * dx + dy * dy);
+                if (distance < enemy.size + player.size) {
+                    endGame();
+                }
+            });
+            
+            // Remove off-screen enemies
+            enemies = enemies.filter(enemy => 
+                enemy.x > -50 && enemy.x < canvas.width + 50 &&
+                enemy.y > -50 && enemy.y < canvas.height + 50
+            );
+            
+            // Check collectibles
+            collectibles.forEach((item, index) => {
+                if (!item.collected) {
+                    const dx = item.x - player.x;
+                    const dy = item.y - player.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    if (dist < enemy.size + player.size) {
-                        endGame();
-                        return;
+                    if (distance < item.size + player.size) {
+                        item.collected = true;
+                        score += 10;
+                        createParticles(item.x, item.y, '#00ffcc');
+                        
+                        // Spawn new collectible
+                        setTimeout(() => {
+                            collectibles[index] = {
+                                x: Math.random() * (canvas.width - 40) + 20,
+                                y: Math.random() * (canvas.height - 40) + 20,
+                                size: 10,
+                                collected: false
+                            };
+                        }, 500);
+                        
+                        // Level up
+                        if (score % 50 === 0) {
+                            level++;
+                            for (let i = 0; i < 2; i++) {
+                                spawnEnemy();
+                            }
+                        }
                     }
                 }
-            }
+            });
             
-            for (var j = collectibles.length - 1; j >= 0; j--) {
-                var collectible = collectibles[j];
-                
-                var dx2 = collectible.x - player.x;
-                var dy2 = collectible.y - player.y;
-                var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-                
-                if (dist2 < collectible.size + player.size) {
-                    score += collectible.value;
-                    createParticles(collectible.x, collectible.y, collectible.color);
-                    collectibles.splice(j, 1);
-                    
-                    setTimeout(spawnCollectible, 2000);
-                    
-                    document.getElementById('score').textContent = 'Score: ' + score;
-                }
-            }
-            
-            for (var k = particles.length - 1; k >= 0; k--) {
-                var particle = particles[k];
+            // Update particles
+            particles.forEach(particle => {
                 particle.x += particle.vx;
                 particle.y += particle.vy;
                 particle.vx *= 0.98;
                 particle.vy *= 0.98;
                 particle.life -= 0.02;
-                
-                if (particle.life <= 0) {
-                    particles.splice(k, 1);
-                }
-            }
+            });
             
-            if (score > level * 1000) {
-                level++;
-                document.getElementById('level').textContent = 'Level: ' + level;
+            particles = particles.filter(p => p.life > 0);
+            
+            // Spawn new enemies
+            if (Math.random() < 0.02 * level) {
                 spawnEnemy();
             }
+            
+            // Update UI
+            document.getElementById('score').textContent = `Score: ${score}`;
+            document.getElementById('level').textContent = `Level: ${level}`;
         }
         
-        function draw() {
-            ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
+        function drawGame() {
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
-            ctx.lineWidth = 1;
-            
-            var gridSize = 50;
-            for (var i = 0; i < canvas.width; i += gridSize) {
+            // Draw particles
+            particles.forEach(particle => {
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
                 ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
-            }
-            for (var j = 0; j < canvas.height; j += gridSize) {
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            
+            // Draw player trail
+            player.trail.forEach((point, index) => {
+                ctx.fillStyle = `rgba(0, 255, 204, ${index / player.trail.length * 0.5})`;
                 ctx.beginPath();
-                ctx.moveTo(0, j);
-                ctx.lineTo(canvas.width, j);
-                ctx.stroke();
-            }
+                ctx.arc(point.x, point.y, player.size * (index / player.trail.length), 0, Math.PI * 2);
+                ctx.fill();
+            });
             
-            for (var t = 0; t < player.trail.length; t++) {
-                var alpha = t / player.trail.length * 0.5;
-                ctx.fillStyle = 'rgba(0, 255, 204, ' + alpha + ')';
-                var point = player.trail[t];
-                ctx.fillRect(point.x - player.size/2, point.y - player.size/2, player.size, player.size);
-            }
+            // Draw player
+            ctx.fillStyle = '#00ffcc';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
             
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.rotate(Date.now() * 0.001);
-            ctx.fillStyle = player.color;
-            ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
-            ctx.restore();
-            
-            for (var e = 0; e < enemies.length; e++) {
-                var enemy = enemies[e];
+            // Draw enemies
+            enemies.forEach(enemy => {
                 ctx.fillStyle = enemy.color;
                 ctx.beginPath();
                 ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
                 ctx.fill();
-            }
+            });
             
-            for (var c = 0; c < collectibles.length; c++) {
-                var collectible = collectibles[c];
-                ctx.save();
-                ctx.translate(collectible.x, collectible.y);
-                ctx.rotate(Date.now() * 0.005);
-                ctx.fillStyle = collectible.color;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = collectible.color;
-                ctx.fillRect(-collectible.size/2, -collectible.size/2, collectible.size, collectible.size);
-                ctx.restore();
-            }
-            
-            for (var p = 0; p < particles.length; p++) {
-                var particle = particles[p];
-                ctx.fillStyle = 'rgba(255, 255, 0, ' + particle.life + ')';
-                ctx.fillRect(particle.x - particle.size/2, particle.y - particle.size/2, particle.size, particle.size);
-            }
+            // Draw collectibles
+            collectibles.forEach(item => {
+                if (!item.collected) {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.beginPath();
+                    ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
         }
         
         function gameLoop() {
             if (!gameRunning) return;
             
-            update();
-            draw();
-            
+            updateGame();
+            drawGame();
             requestAnimationFrame(gameLoop);
         }
         
-        function endGame() {
-            console.log('GAME OVER - Score:', score);
+        async function endGame() {
             gameRunning = false;
+            gamesLeft--;
+            updateGamesLeftDisplay();
             
-            // SHOW USER INFO PANEL AGAIN
-            document.getElementById('userInfo').style.display = 'block';
-            
-            // Add the new score to local array immediately
-            var newScore = {
-                name: playerName || currentUsername || 'Anonymous',
-                score: score,
-                level: level
-            };
-            
-            // Save score to server
-            saveScore();
-            
-            // Just show the score, no wallet prompt during game
-            document.getElementById('finalScore').textContent = 'Score: ' + score;
-            
-            document.getElementById('gameOverScreen').style.display = 'flex';
-            
-            // Add new score to global array for immediate display
-            globalScores.push(newScore);
-            globalScores.sort(function(a, b) {
-                return b.score - a.score;
-            });
-            globalScores = globalScores.slice(0, 100);
-            
-            // Display immediately with local data
-            gameOverPage = 1;
-            displayScores();
-            
-            // Then refresh from server to sync
-            setTimeout(function() {
-                loadScores();
-            }, 1000);
-        }
-        
-        function saveScore() {
-            var newScore = {
-                name: playerName || currentUsername || 'Anonymous',
-                score: score,
-                level: level
-            };
-            
-            document.getElementById('syncStatus').textContent = '⏳ Saving...';
-            
-            // If auth is active, use auth API
-            if (authToken) {
-                fetch(API_URL + '/scores', {
+            // Save score
+            try {
+                await fetch(API_URL + '/scores', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + authToken
                     },
                     body: JSON.stringify({
+                        username: currentUsername,
                         score: score,
                         level: level
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        gamesLeft = data.gamesLeft;
-                        updateGamesLeftDisplay();
-                        
-                        if (gamesLeft <= 0) {
-                            document.getElementById('restartBtn').textContent = 'NO GAMES LEFT';
-                            document.getElementById('restartBtn').disabled = true;
-                        }
-                        
-                        loadScores();
-                    }
-                })
-                .catch(error => {
-                    console.error('Save score error:', error);
                 });
-            } else {
-                // Use original proxy API for non-auth mode
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', API_URL, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            var response = JSON.parse(xhr.responseText);
-                            console.log('✅ Score saved securely!', response);
-                            document.getElementById('syncStatus').textContent = '🌍 Global';
-                            loadScores();
-                        } else {
-                            console.log('Using fallback');
-                            saveLocalScore(newScore);
-                            document.getElementById('syncStatus').textContent = '📱 Local';
-                        }
-                    }
-                };
-                
-                xhr.onerror = function() {
-                    console.log('Network error, using fallback');
-                    saveLocalScore(newScore);
-                    document.getElementById('syncStatus').textContent = '📱 Local';
-                };
-                
-                xhr.send(JSON.stringify(newScore));
+            } catch (error) {
+                console.error('Failed to save score:', error);
             }
+            
+            // Show game over
+            document.getElementById('finalScore').textContent = `Score: ${score}`;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            loadScores(true);
         }
         
-        function loadScores() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', API_URL + '/scores', true);
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        try {
-                            var newScores = JSON.parse(xhr.responseText);
-                            // Update even if empty (means no scores yet)
-                            if (Array.isArray(newScores)) {
-                                globalScores = newScores;
-                                console.log('✅ Loaded', globalScores.length, 'NFT holder scores');
-                                document.getElementById('syncStatus').textContent = '🌍 Global';
-                                // Update display if on scores screen
-                                if (document.getElementById('gameOverScreen').style.display === 'flex') {
-                                    displayScores();
-                                }
-                                if (document.getElementById('scoresViewScreen').style.display === 'flex') {
-                                    displayScorePage();
-                                }
-                            } else {
-                                console.log('Invalid response format');
-                            }
-                        } catch(e) {
-                            console.log('Parse error, keeping existing scores');
-                        }
-                    } else {
-                        loadLocalScores();
-                        document.getElementById('syncStatus').textContent = '📱 Local';
-                    }
-                }
-            };
-            
-            xhr.onerror = function() {
-                console.log('Fallback to local');
-                loadLocalScores();
-                document.getElementById('syncStatus').textContent = '📱 Local';
-            };
-            
-            xhr.send();
-        }
-        
-        function saveLocalScore(newScore) {
+        async function loadScores(isGameOver = false) {
             try {
-                var stored = localStorage.getItem('shackerScores');
-                var scores = stored ? JSON.parse(stored) : [];
-                scores.push(newScore);
-                scores.sort(function(a, b) {
-                    return b.score - a.score;
+                const response = await fetch(API_URL + '/scores');
+                const scores = await response.json();
+                
+                const leaderboard = document.getElementById('leaderboard');
+                leaderboard.innerHTML = '<h2 style="color: #00ffcc; margin-bottom: 20px;">LEADERBOARD</h2>';
+                
+                scores.slice(0, 10).forEach((entry, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'score-entry';
+                    if (entry.username === currentUsername && isGameOver) {
+                        div.classList.add('highlight');
+                    }
+                    div.innerHTML = `
+                        <span>${index + 1}. ${entry.username}</span>
+                        <span>${entry.score}</span>
+                    `;
+                    leaderboard.appendChild(div);
                 });
-                scores = scores.slice(0, 50);
-                localStorage.setItem('shackerScores', JSON.stringify(scores));
-                globalScores = scores;
-            } catch(e) {
-                console.log('Could not save locally');
+            } catch (error) {
+                console.error('Failed to load scores:', error);
             }
         }
         
-        function loadLocalScores() {
-            try {
-                var stored = localStorage.getItem('shackerScores');
-                if (stored) {
-                    globalScores = JSON.parse(stored);
-                } else {
-                    globalScores = [];
-                }
-            } catch(e) {
-                globalScores = [];
-            }
-        }
-        
-        var gameOverPage = 1;
-        
-        function displayScores() {
-            var startIdx = (gameOverPage - 1) * scoresPerPage;
-            var endIdx = startIdx + scoresPerPage;
-            var pageScores = globalScores.slice(startIdx, endIdx);
-            
-            var html = '';
-            
-            // Always show 5 slots
-            for (var i = 0; i < scoresPerPage; i++) {
-                var position = startIdx + i;
-                
-                if (i < pageScores.length) {
-                    var entry = pageScores[i];
-                    var medal = '';
-                    var medalStyle = '';
-                    
-                    if (position === 0) {
-                        medal = '🥇';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    } else if (position === 1) {
-                        medal = '🥈';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    } else if (position === 2) {
-                        medal = '🥉';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    } else {
-                        medal = (position + 1) + '.';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    }
-                    
-                    // Add wallet badge if player has wallet
-                    var walletBadge = entry.hasWallet ? ' 🦊' : '';
-                    
-                    html += '<div class="score-entry">';
-                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + (entry.name || 'Anonymous') + walletBadge + '</span>';
-                    html += '<span>' + entry.score + '</span>';
-                    html += '</div>';
-                } else {
-                    // Empty slot
-                    html += '<div class="score-entry" style="visibility: hidden;">';
-                    html += '<span>-</span>';
-                    html += '<span>-</span>';
-                    html += '</div>';
-                }
-            }
-            
-            if (globalScores.length === 0) {
-                html = '<div style="height: 260px; display: flex; align-items: center; justify-content: center;">';
-                html += '<p style="text-align: center; color: #888;">No scores yet</p>';
-                html += '</div>';
-            }
-            
-            document.getElementById('scoresList').innerHTML = html;
-            
-            // Create pagination for game over screen
-            var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
-            var paginationHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;">';
-            
-            if (gameOverPage > 1) {
-                paginationHtml += '<button class="page-btn" onclick="gameOverPage--; displayScores();">◀</button>';
-            } else {
-                paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
-            }
-            
-            paginationHtml += '<span style="color: #888; margin: 0 15px; min-width: 100px; text-align: center;">Page ' + gameOverPage + '/' + totalPages + '</span>';
-            
-            if (gameOverPage < totalPages) {
-                paginationHtml += '<button class="page-btn" onclick="gameOverPage++; displayScores();">▶</button>';
-            } else {
-                paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
-            }
-            
-            paginationHtml += '</div>';
-            document.getElementById('gameOverPagination').innerHTML = paginationHtml;
-        }
-        
-        function viewScores() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('scoresViewScreen').style.display = 'flex';
-            
-            // Refresh scores before showing
-            loadScores();
-            
-            // Reset to first page
-            currentPage = 1;
-            displayScorePage();
-        }
-        
-        function displayScorePage() {
-            var startIdx = (currentPage - 1) * scoresPerPage;
-            var endIdx = startIdx + scoresPerPage;
-            var pageScores = globalScores.slice(startIdx, endIdx);
-            
-            var html = '';
-            
-            // Always show 5 slots
-            for (var i = 0; i < scoresPerPage; i++) {
-                var position = startIdx + i;
-                
-                if (i < pageScores.length) {
-                    var entry = pageScores[i];
-                    var medal = '';
-                    var medalStyle = '';
-                    
-                    if (position === 0) {
-                        medal = '🥇';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    } else if (position === 1) {
-                        medal = '🥈';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    } else if (position === 2) {
-                        medal = '🥉';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    } else {
-                        medal = (position + 1) + '.';
-                        medalStyle = 'display: inline-block; width: 30px; text-align: center;';
-                    }
-                    
-                    // Add wallet badge if player has wallet
-                    var walletBadge = entry.hasWallet ? ' 🦊' : '';
-                    
-                    html += '<div class="score-entry">';
-                    html += '<span><span style="' + medalStyle + '">' + medal + '</span> ' + (entry.name || 'Anonymous') + walletBadge + '</span>';
-                    html += '<span>' + entry.score + '</span>';
-                    html += '</div>';
-                } else {
-                    // Empty slot
-                    html += '<div class="score-entry" style="visibility: hidden;">';
-                    html += '<span>-</span>';
-                    html += '<span>-</span>';
-                    html += '</div>';
-                }
-            }
-            
-            if (globalScores.length === 0) {
-                html = '<div style="height: 320px; display: flex; align-items: center; justify-content: center;">';
-                html += '<p style="text-align: center; color: #888;">No scores yet. Be the first!</p>';
-                html += '</div>';
-            }
-            
-            document.getElementById('scoresList2').innerHTML = html;
-            
-            // Create pagination buttons
-            var totalPages = Math.ceil(globalScores.length / scoresPerPage) || 1;
-            var paginationHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;">';
-            
-            if (currentPage > 1) {
-                paginationHtml += '<button class="page-btn" onclick="currentPage--; displayScorePage();">◀</button>';
-            } else {
-                paginationHtml += '<button class="page-btn" style="visibility: hidden;">◀</button>';
-            }
-            
-            paginationHtml += '<span style="color: #888; margin: 0 15px; min-width: 100px; text-align: center;">Page ' + currentPage + '/' + totalPages + '</span>';
-            
-            if (currentPage < totalPages) {
-                paginationHtml += '<button class="page-btn" onclick="currentPage++; displayScorePage();">▶</button>';
-            } else {
-                paginationHtml += '<button class="page-btn" style="visibility: hidden;">▶</button>';
-            }
-            
-            paginationHtml += '</div>';
-            document.getElementById('pagination').innerHTML = paginationHtml;
-        }
-        
-        function restartGame() {
-            // Check if auth system is active and games are limited
-            if (authToken && gamesLeft <= 0) {
-                return;
-            }
-            
+        function backToMenu() {
             document.getElementById('gameOverScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'flex';
             
-            // SHOW USER INFO PANEL ON MENU
-            document.getElementById('userInfo').style.display = 'block';
-        }
-        
-        console.log('🔒 Shacker Secure Proxy Version');
-        console.log('API: ' + API_URL);
-        
-        if (window.parent !== window) {
-            console.log('Running in iframe (OpenSea compatible with secure proxy)');
-        }
-        
-        // Generate random 6-character code
-        function generateLinkCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 6; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-        
-        // Check wallet status from profile
-        function checkWalletStatus() {
-            console.log('=== checkWalletStatus called ===');
-            console.log('authToken exists:', !!authToken);
-            
-            if (!authToken) {
-                console.log('No auth token, skipping wallet check');
-                return;
-            }
-            
-            // ENSURE userInfo panel is visible
-            const userInfoPanel = document.getElementById('userInfo');
-            if (userInfoPanel) {
-                console.log('Making userInfo panel visible');
-                userInfoPanel.style.display = 'block';
-            }
-            
-            fetch(API_URL + '/profile', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + authToken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Profile data received:', data);
-                
-                if (data.wallet_address) {
-                    console.log('Wallet already linked:', data.wallet_address);
-                    // Wallet already linked
-                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                    document.getElementById('walletLinkedInfo').style.display = 'block';
-                    document.getElementById('linkedWalletDisplay').textContent = 
-                        data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
-                    if (document.getElementById('walletBadge')) {
-                        document.getElementById('walletBadge').classList.add('active');
-                    }
-                    if (document.getElementById('walletAddressDisplay')) {
-                        document.getElementById('walletAddressDisplay').textContent = 
-                            data.wallet_address.slice(0, 6) + '...' + data.wallet_address.slice(-4);
-                    }
-                } else {
-                    console.log('No wallet linked - checking if in iframe');
-                    // Check if in iframe (OpenSea)
-                    const isInIframe = window.parent !== window;
-                    if (!isInIframe) {
-                        // Only show link button if NOT in iframe
-                        console.log('Not in iframe - showing link button');
-                        document.getElementById('walletNotLinkedInfo').style.display = 'block';
-                        document.getElementById('walletLinkedInfo').style.display = 'none';
-                        if (document.getElementById('walletBadge')) {
-                            document.getElementById('walletBadge').classList.remove('active');
-                        }
-                    } else {
-                        console.log('In iframe - hiding wallet UI');
-                        // In iframe - hide both wallet UI elements
-                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                        document.getElementById('walletLinkedInfo').style.display = 'none';
-                    }
-                }
-            })
-            .catch(error => {
-                console.log('Could not check wallet status:', error);
-                // Check if in iframe before showing button
-                const isInIframe = window.parent !== window;
-                if (!isInIframe) {
-                    // Only show link button if NOT in iframe
-                    document.getElementById('walletNotLinkedInfo').style.display = 'block';
-                    document.getElementById('walletLinkedInfo').style.display = 'none';
-                } else {
-                    // In iframe - hide both
-                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                    document.getElementById('walletLinkedInfo').style.display = 'none';
-                }
-            });
-        }
-        
-        // Link wallet to existing account
-        async function linkWalletToAccount() {
-            console.log('=== WALLET LINK START ===');
-            
-            if (!authToken) {
-                alert('Please login first');
-                return;
-            }
-            
-            // Check if in iframe (OpenSea)
-            const isInIframe = window.parent !== window;
-            console.log('Is in iframe (OpenSea)?', isInIframe);
-            
-            // Use session-based system ONLY for OpenSea iframe
-            if (isInIframe) {
-                console.log('USING IFRAME/OPENSEA MODE!');
-                // On OpenSea - create a session for wallet linking
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<div style="padding: 10px; background: rgba(246,133,27,0.2); border: 1px solid #f6851b; border-radius: 10px;">' +
-                        '<div class="spinner"></div>' +
-                        '<div style="color: #ffd700;">Creating secure session...</div>' +
-                    '</div>';
-                
-                // Create session on server
-                fetch(API_URL + '/wallet/create-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + authToken
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const sessionId = data.sessionId;
-                        const linkUrl = data.linkUrl || `https://shacker-game.vercel.app/wallet-auto-link.html?session=${sessionId}&user=${currentUsername}`;
-                        
-                        console.log('Session created, linkUrl:', linkUrl);
-                        console.log('SessionId:', sessionId);
-                        
-                        // Try to auto-open the wallet link page
-                        const newWindow = window.open(linkUrl, '_blank');
-                        
-                        // Update UI based on whether window opened
-                        if (newWindow) {
-                            // Window opened successfully
-                            document.getElementById('walletNotLinkedInfo').innerHTML = 
-                            '<div style="padding: 15px; background: rgba(246,133,27,0.2); border: 2px solid #f6851b; border-radius: 10px;">' +
-                                '<div style="color: #00ffcc; font-size: 16px; margin-bottom: 10px;">' +
-                                    '🦊 Wallet connection in progress...' +
-                                '</div>' +
-                                '<div style="color: #ffd700;">' +
-                                    '⏳ Please complete the connection in the new tab' +
-                                '</div>' +
-                                '<div style="color: #aaa; margin-top: 10px; font-size: 12px;">' +
-                                    'Window opened automatically. If blocked, <a href="' + linkUrl + '" target="_blank" style="color: #f6851b; text-decoration: underline;">click here</a>' +
-                                '</div>' +
-                            '</div>';
-                        } else {
-                            // In OpenSea iframe - show NFT holder benefits message (simplified)
-                            document.getElementById('walletNotLinkedInfo').innerHTML = 
-                            '<div style="padding: 25px; background: linear-gradient(135deg, rgba(246,133,27,0.4), rgba(226,118,27,0.3)); border: 3px solid #f6851b; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(246,133,27,0.3);">' +
-                                '<div style="color: #ffd700; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">' +
-                                    '🏆 NFT HOLDERS EXCLUSIVE LEADERBOARD 🏆' +
-                                '</div>' +
-                                '<div style="color: #00ffcc; font-size: 18px; margin-bottom: 25px; line-height: 1.5;">' +
-                                    'Own this NFT? Join the competitive leaderboard!<br>' +
-                                    '<span style="color: #fff; font-size: 16px;">Play the game on our official site!</span>' +
-                                '</div>' +
-                                '<a href="https://shackers.io" target="_blank" style="' +
-                                    'display: inline-block;' +
-                                    'background: linear-gradient(135deg, #00ff88, #00cc66);' +
-                                    'color: #000;' +
-                                    'padding: 20px 50px;' +
-                                    'border-radius: 50px;' +
-                                    'text-decoration: none;' +
-                                    'font-weight: bold;' +
-                                    'font-size: 20px;' +
-                                    'box-shadow: 0 8px 25px rgba(0,255,136,0.4);' +
-                                    'transition: all 0.3s;' +
-                                    'animation: pulse 2s infinite;"' +
-                                    'onmouseover="this.style.transform=\'scale(1.1)\'; this.style.boxShadow=\'0 12px 35px rgba(0,255,136,0.6)\'"' +
-                                    'onmouseout="this.style.transform=\'scale(1)\'; this.style.boxShadow=\'0 8px 25px rgba(0,255,136,0.4)\'">' +
-                                    '🎮 PLAY & JOIN LEADERBOARD' +
-                                '</a>' +
-                                '<div style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 15px; border: 2px solid #f6851b;">' +
-                                    '<div style="color: #00ffcc; font-size: 16px; font-weight: bold; margin-bottom: 15px;">✨ FULL FEATURES:</div>' +
-                                    '<div style="color: #fff; font-size: 14px; text-align: left; line-height: 1.8;">' +
-                                        '• Connect MetaMask directly<br>' +
-                                        '• NFT holder leaderboard<br>' +
-                                        '• Daily game limits<br>' +
-                                        '• Wallet verification<br>' +
-                                        '• No iframe restrictions!' +
-                                    '</div>' +
-                                '</div>' +
-                                '<div style="margin-top: 20px; color: #ffd700; font-size: 14px; line-height: 1.6;">' +
-                                    '💡 <b>Pro Tip:</b> OpenSea is for buying/selling NFTs.<br>' +
-                                    'Play the game on our official site for the best experience!' +
-                                '</div>' +
-                            '</div>';
-                        }
-                        
-                        // Start polling for completion
-                        const pollInterval = setInterval(() => {
-                            fetch(API_URL + '/wallet/session-status?sessionId=' + sessionId, {
-                                headers: {
-                                    'Authorization': 'Bearer ' + authToken
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(status => {
-                                if (status.completed) {
-                                    clearInterval(pollInterval);
-                                    // Update UI
-                                    storage.setItem('walletAddress', status.walletAddress);
-                                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                                    document.getElementById('walletLinkedInfo').style.display = 'block';
-                                    document.getElementById('linkedWalletDisplay').textContent = 
-                                        status.walletAddress.slice(0, 6) + '...' + status.walletAddress.slice(-4);
-                                    alert('✅ Wallet linked successfully!');
-                                    loadScores();
-                                }
-                            })
-                            .catch(error => {
-                                console.log('Poll error:', error);
-                            });
-                        }, 1500); // Check every 1.5 seconds
-                        
-                        // Stop polling after 10 minutes
-                        setTimeout(() => clearInterval(pollInterval), 600000);
-                    }
-                })
-                .catch(error => {
-                    console.error('Session creation error:', error);
-                    document.getElementById('walletNotLinkedInfo').innerHTML = 
-                        '<div style="color: #ff4444;">Error: ' + error.message + '</div>';
-                });
-                
-                // Old code display removed - now using session-based method
-                
-                // Still listen for success message in case they come back
-                window.addEventListener('message', function(e) {
-                    if (e.data && e.data.type === 'wallet_linked') {
-                        // Update UI
-                        storage.setItem('walletAddress', e.data.wallet);
-                        document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                        document.getElementById('walletLinkedInfo').style.display = 'block';
-                        document.getElementById('linkedWalletDisplay').textContent = 
-                            e.data.wallet.slice(0, 6) + '...' + e.data.wallet.slice(-4);
-                        alert('✅ Wallet linked successfully!');
-                        loadScores();
-                    }
-                });
-                return;
-            }
-            
-            try {
-                // Not in iframe - normal flow
-                if (!window.ethereum) {
-                    alert('No wallet detected! Please install MetaMask.');
-                    return;
-                }
-                
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #00ffcc;">🔄 Requesting wallet access...</span>';
-                
-                // Request accounts
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_requestAccounts' 
-                });
-                
-                const wallet_address = accounts[0];
-                
-                // Create message to sign with timestamp
-                const timestamp = new Date().toISOString();
-                const message = `Link wallet to Shacker account: ${currentUsername}\nWallet: ${wallet_address}\nTimestamp: ${timestamp}`;
-                
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #00ffcc;">📝 Please sign the message in MetaMask...</span>';
-                
-                // Request signature to PROVE ownership
-                const signature = await window.ethereum.request({
-                    method: 'personal_sign',
-                    params: [message, wallet_address]
-                });
-                
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<span style="color: #00ffcc;">🔄 Verifying signature...</span>';
-                
-                // Send wallet WITH signature proof
-                const linkResponse = await fetch(API_URL + '/wallet/link', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    body: JSON.stringify({ wallet_address, signature, message })
-                });
-                
-                const data = await linkResponse.json();
-                
-                if (data.success) {
-                    // Update UI to show wallet is linked
-                    storage.setItem('walletAddress', wallet_address);
-                    
-                    document.getElementById('walletNotLinkedInfo').style.display = 'none';
-                    document.getElementById('walletLinkedInfo').style.display = 'block';
-                    document.getElementById('linkedWalletDisplay').textContent = 
-                        wallet_address.slice(0, 6) + '...' + wallet_address.slice(-4);
-                    
-                    // Show wallet badge
-                    document.getElementById('walletBadge').classList.add('active');
-                    document.getElementById('walletAddressDisplay').textContent = 
-                        wallet_address.slice(0, 6) + '...' + wallet_address.slice(-4);
-                    
-                    alert('✅ Wallet linked successfully! You will now appear on the NFT holders leaderboard.');
-                    
-                    // Reload scores to show on leaderboard
-                    loadScores();
-                } else {
-                    throw new Error(data.error || 'Failed to link wallet');
-                }
-                
-            } catch (error) {
-                console.error('Wallet link error:', error);
-                
-                // Check for specific error types
-                let errorMsg = 'Connection failed';
-                if (error.message && error.message.includes('already pending')) {
-                    errorMsg = 'Please check MetaMask for pending request';
-                } else if (error.code === 4001) {
-                    errorMsg = 'Connection cancelled by user';
-                } else if (error.message) {
-                    errorMsg = error.message;
-                }
-                
-                document.getElementById('walletNotLinkedInfo').innerHTML = 
-                    '<div>' +
-                        '<span style="color: #ff4444;">❌ ' + errorMsg + '</span><br>' +
-                        '<button class="link-wallet-btn" onclick="linkWalletToAccount()" style="margin-top: 10px;">Try Again</button>' +
-                    '</div>';
+            if (gamesLeft <= 0) {
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('startBtn').textContent = 'NO GAMES LEFT TODAY';
             }
         }
         
-        // Check if wallet was previously connected
-        window.addEventListener('load', function() {
-            const walletAddress = storage.getItem('walletAddress');
-            if (walletAddress) {
-                document.getElementById('walletBadge').classList.add('active');
-                document.getElementById('walletAddressDisplay').textContent = 
-                    walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+        // Setup controls
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameRunning) {
+                const rect = canvas.getBoundingClientRect();
+                player.x = e.clientX - rect.left;
+                player.y = e.clientY - rect.top;
             }
         });
         
-        // Removed old code verification functions - not needed anymore
-        
-        // Listen for account changes
-        if (window.ethereum) {
-            window.ethereum.on('accountsChanged', function(accounts) {
-                if (accounts.length === 0) {
-                    // User disconnected wallet
-                    storage.removeItem('walletAddress');
-                    document.getElementById('walletBadge').classList.remove('active');
-                }
-            });
-        }
-    </script>
-    
-    <!-- Simplified wallet connection for OpenSea -->
-    <script>
-    // Try to inject ethereum from OpenSea if available
-    if (window.parent !== window) {
-        console.log('Trying to access OpenSea wallet...');
-        
-        // Listen for ethereum provider from parent
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'ethereum_provider') {
-                window.ethereum = e.data.ethereum;
-                console.log('Received ethereum provider from parent!');
+        // Touch controls for mobile
+        canvas.addEventListener('touchmove', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                player.x = touch.clientX - rect.left;
+                player.y = touch.clientY - rect.top;
             }
         });
         
-        // Request ethereum from parent
-        try {
-            window.parent.postMessage({ type: 'request_ethereum' }, '*');
-        } catch(e) {
-            console.log('Cannot communicate with parent:', e);
-        }
-    }
+        // Initialize
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        checkAuth();
     </script>
 </body>
 </html>
