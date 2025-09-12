@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shacker Game</title>
+    <title>Shacker Game - Secure Proxy Version</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -159,31 +159,6 @@
             display: flex;
             justify-content: space-between;
         }
-        
-        /* Wallet connection styles */
-        #walletBtn {
-            padding: 10px 20px;
-            font-size: 14px;
-            background: rgba(138, 43, 226, 0.8);
-            color: white;
-            border: 1px solid #8a2be2;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s;
-        }
-        
-        #walletBtn:hover {
-            background: #8a2be2;
-            transform: scale(1.05);
-        }
-        
-        #walletStatus {
-            font-size: 12px;
-            color: #8a2be2;
-            margin-top: 5px;
-            opacity: 0.8;
-        }
     </style>
 </head>
 <body>
@@ -197,13 +172,12 @@
         
         <div id="syncStatus">🔄 Checking...</div>
         
-        <!-- START SCREEN MANDATORY FOR OPENSEA -->
+        <!-- START SCREEN -->
         <div id="startScreen">
             <h1>SHACKER</h1>
             <input type="text" id="nameInput" placeholder="Enter your name" maxlength="20">
             <button class="btn" id="startBtn">START GAME</button>
-            <button id="walletBtn">🦊 Connect Wallet (Optional)</button>
-            <div id="walletStatus"></div>
+            <button class="btn" id="viewScoresBtn" style="background: linear-gradient(135deg, #ffd700, #ffa500);">🏆 VIEW SCORES</button>
         </div>
         
         <!-- GAME OVER SCREEN -->
@@ -216,10 +190,22 @@
             </div>
             <button class="btn" id="restartBtn">PLAY AGAIN</button>
         </div>
+        
+        <!-- SCORES VIEW SCREEN -->
+        <div id="scoresViewScreen" style="position: absolute; width: 100%; height: 100%; background: rgba(26,26,46,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white;">
+            <h2 style="font-size: 48px; color: #ffd700; margin-bottom: 20px;">🏆 LEADERBOARD</h2>
+            <div id="leaderboard2" style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; margin: 20px; max-width: 400px; max-height: 400px; overflow-y: auto;">
+                <div id="scoresList2"></div>
+            </div>
+            <button class="btn" onclick="document.getElementById('scoresViewScreen').style.display='none'; document.getElementById('startScreen').style.display='flex';">BACK TO MENU</button>
+        </div>
     </div>
     
     <script>
-        // OPENSEA ULTRA COMPATIBLE VERSION - NO MODERN JS
+        // SECURE PROXY VERSION - API Key hidden on server
+        
+        // API endpoint - Using your secure proxy
+        var API_URL = 'https://shacker-proxy.onrender.com/scores';
         
         // Game variables
         var canvas = null;
@@ -229,7 +215,6 @@
         var score = 0;
         var level = 1;
         var globalScores = [];
-        var connectedWallet = null;
         
         // Player
         var player = {
@@ -247,47 +232,33 @@
         
         // Initialize when page loads
         window.onload = function() {
-            console.log('Game loading...');
+            console.log('🔒 Shacker Secure Proxy loading...');
             
-            // Get canvas
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
-            // Set canvas size
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            // Load saved scores
-            loadLocalScores();
+            loadScores();
             
-            // Add button click handlers
             document.getElementById('startBtn').onclick = startGame;
             document.getElementById('restartBtn').onclick = restartGame;
-            document.getElementById('walletBtn').onclick = connectWallet;
+            document.getElementById('viewScoresBtn').onclick = viewScores;
             
-            // Check if wallet already connected
-            checkWalletConnection();
-            
-            // Add mouse/touch controls
             setupControls();
             
-            console.log('Game ready!');
+            console.log('Game ready with secure proxy!');
         };
         
         function startGame() {
             console.log('Starting game...');
             
-            // Get player name
             playerName = document.getElementById('nameInput').value || 'Player';
-            console.log('Player name:', playerName);
             
-            // Hide start screen
             document.getElementById('startScreen').style.display = 'none';
-            
-            // Make sure game over is hidden
             document.getElementById('gameOverScreen').style.display = 'none';
             
-            // Reset game state
             score = 0;
             level = 1;
             enemies = [];
@@ -295,37 +266,26 @@
             particles = [];
             player.trail = [];
             
-            // Check canvas size
             if (canvas.width === 0 || canvas.height === 0) {
                 canvas.width = window.innerWidth || 800;
                 canvas.height = window.innerHeight || 600;
             }
-            console.log('Canvas size:', canvas.width, 'x', canvas.height);
             
-            // Center player
             player.x = canvas.width / 2;
             player.y = canvas.height / 2;
             player.size = 20;
-            console.log('Player position:', player.x, player.y);
             
-            // Create initial enemies
             for (var i = 0; i < 5; i++) {
                 spawnEnemy();
             }
-            console.log('Enemies created:', enemies.length);
             
-            // Create collectibles
             for (var j = 0; j < 3; j++) {
                 spawnCollectible();
             }
-            console.log('Collectibles created:', collectibles.length);
             
-            // Start game
             gameRunning = true;
-            console.log('Game is now running!');
             gameLoop();
             
-            // Start spawning enemies (only set interval once)
             if (!window.enemySpawnInterval) {
                 window.enemySpawnInterval = setInterval(function() {
                     if (gameRunning && enemies.length < 10 + level) {
@@ -336,7 +296,6 @@
         }
         
         function setupControls() {
-            // Mouse control with proper coordinate adjustment
             canvas.onmousemove = function(e) {
                 if (gameRunning) {
                     var rect = canvas.getBoundingClientRect();
@@ -348,7 +307,6 @@
                 }
             };
             
-            // Touch control with proper coordinate adjustment
             canvas.ontouchmove = function(e) {
                 if (gameRunning && e.touches[0]) {
                     e.preventDefault();
@@ -373,22 +331,22 @@
                 color: 'hsl(' + Math.floor(Math.random() * 60) + ', 100%, 50%)'
             };
             
-            if (side === 0) { // Top
+            if (side === 0) {
                 enemy.x = Math.random() * canvas.width;
                 enemy.y = enemy.size;
                 enemy.vx = (Math.random() - 0.5) * 2;
                 enemy.vy = Math.random() * 2 + 1;
-            } else if (side === 1) { // Right
+            } else if (side === 1) {
                 enemy.x = canvas.width - enemy.size;
                 enemy.y = Math.random() * canvas.height;
                 enemy.vx = -(Math.random() * 2 + 1);
                 enemy.vy = (Math.random() - 0.5) * 2;
-            } else if (side === 2) { // Bottom
+            } else if (side === 2) {
                 enemy.x = Math.random() * canvas.width;
                 enemy.y = canvas.height - enemy.size;
                 enemy.vx = (Math.random() - 0.5) * 2;
                 enemy.vy = -(Math.random() * 2 + 1);
-            } else { // Left
+            } else {
                 enemy.x = enemy.size;
                 enemy.y = Math.random() * canvas.height;
                 enemy.vx = Math.random() * 2 + 1;
@@ -426,21 +384,17 @@
         }
         
         function update() {
-            // Update player trail
             player.trail.push({x: player.x, y: player.y});
             if (player.trail.length > 20) {
                 player.trail.shift();
             }
             
-            // Update enemies
             for (var i = enemies.length - 1; i >= 0; i--) {
                 var enemy = enemies[i];
                 
-                // Move
                 enemy.x += enemy.vx;
                 enemy.y += enemy.vy;
                 
-                // Bounce off walls
                 if (enemy.x <= enemy.size || enemy.x >= canvas.width - enemy.size) {
                     enemy.vx = -enemy.vx;
                     enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
@@ -450,26 +404,21 @@
                     enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
                 }
                 
-                // Keep enemies in bounds
                 enemy.x = Math.max(enemy.size, Math.min(canvas.width - enemy.size, enemy.x));
                 enemy.y = Math.max(enemy.size, Math.min(canvas.height - enemy.size, enemy.y));
                 
-                // Collision with player (only if game is running)
                 if (gameRunning && player.x && player.y) {
                     var dx = enemy.x - player.x;
                     var dy = enemy.y - player.y;
                     var dist = Math.sqrt(dx * dx + dy * dy);
                     
                     if (dist < enemy.size + player.size) {
-                        // Game over
-                        console.log('Collision detected! Distance:', dist);
                         endGame();
                         return;
                     }
                 }
             }
             
-            // Update collectibles
             for (var j = collectibles.length - 1; j >= 0; j--) {
                 var collectible = collectibles[j];
                 
@@ -478,20 +427,16 @@
                 var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
                 
                 if (dist2 < collectible.size + player.size) {
-                    // Collect
                     score += collectible.value;
                     createParticles(collectible.x, collectible.y, collectible.color);
                     collectibles.splice(j, 1);
                     
-                    // Spawn new one after delay
                     setTimeout(spawnCollectible, 2000);
                     
-                    // Update UI
                     document.getElementById('score').textContent = 'Score: ' + score;
                 }
             }
             
-            // Update particles
             for (var k = particles.length - 1; k >= 0; k--) {
                 var particle = particles[k];
                 particle.x += particle.vx;
@@ -505,7 +450,6 @@
                 }
             }
             
-            // Level up
             if (score > level * 1000) {
                 level++;
                 document.getElementById('level').textContent = 'Level: ' + level;
@@ -514,11 +458,9 @@
         }
         
         function draw() {
-            // Clear
             ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw grid
             ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
             ctx.lineWidth = 1;
             
@@ -536,7 +478,6 @@
                 ctx.stroke();
             }
             
-            // Draw player trail
             for (var t = 0; t < player.trail.length; t++) {
                 var alpha = t / player.trail.length * 0.5;
                 ctx.fillStyle = 'rgba(0, 255, 204, ' + alpha + ')';
@@ -544,7 +485,6 @@
                 ctx.fillRect(point.x - player.size/2, point.y - player.size/2, player.size, player.size);
             }
             
-            // Draw player
             ctx.save();
             ctx.translate(player.x, player.y);
             ctx.rotate(Date.now() * 0.001);
@@ -552,7 +492,6 @@
             ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
             ctx.restore();
             
-            // Draw enemies
             for (var e = 0; e < enemies.length; e++) {
                 var enemy = enemies[e];
                 ctx.fillStyle = enemy.color;
@@ -561,7 +500,6 @@
                 ctx.fill();
             }
             
-            // Draw collectibles
             for (var c = 0; c < collectibles.length; c++) {
                 var collectible = collectibles[c];
                 ctx.save();
@@ -574,7 +512,6 @@
                 ctx.restore();
             }
             
-            // Draw particles
             for (var p = 0; p < particles.length; p++) {
                 var particle = particles[p];
                 ctx.fillStyle = 'rgba(255, 255, 0, ' + particle.life + ')';
@@ -595,14 +532,11 @@
             console.log('GAME OVER - Score:', score);
             gameRunning = false;
             
-            // Save score
             saveScore();
             
-            // Show game over
             document.getElementById('finalScore').textContent = 'Score: ' + score;
             document.getElementById('gameOverScreen').style.display = 'flex';
             
-            // Display scores
             displayScores();
         }
         
@@ -611,61 +545,112 @@
             document.getElementById('startScreen').style.display = 'flex';
         }
         
+        function viewScores() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('scoresViewScreen').style.display = 'flex';
+            
+            // Refresh scores before showing
+            loadScores();
+            
+            // Display scores in the view screen
+            var html = '';
+            var top10 = globalScores.slice(0, 10);
+            
+            for (var i = 0; i < top10.length; i++) {
+                var entry = top10[i];
+                var medal = '';
+                if (i === 0) medal = '🥇';
+                else if (i === 1) medal = '🥈';
+                else if (i === 2) medal = '🥉';
+                else medal = (i + 1) + '.';
+                
+                html += '<div class="score-entry">';
+                html += '<span>' + medal + ' ' + entry.name + '</span>';
+                html += '<span>' + entry.score + '</span>';
+                html += '</div>';
+            }
+            
+            document.getElementById('scoresList2').innerHTML = html || '<p style="text-align: center; color: #888;">No scores yet. Be the first!</p>';
+        }
+        
+        // SECURE PROXY API Functions
         function saveScore() {
             var newScore = {
                 name: playerName,
                 score: score,
-                wallet: connectedWallet || null,
-                date: new Date().toISOString()
+                level: level
             };
             
-            // Load existing scores first to not lose them
-            loadLocalScores();
+            document.getElementById('syncStatus').textContent = '⏳ Saving...';
             
-            // Add new score
-            globalScores.push(newScore);
+            // Use XMLHttpRequest for better compatibility
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', API_URL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
             
-            // Sort
-            globalScores.sort(function(a, b) {
-                return b.score - a.score;
-            });
-            
-            // Keep top 50
-            globalScores = globalScores.slice(0, 50);
-            
-            // Always save to localStorage
-            try {
-                localStorage.setItem('shackerScores', JSON.stringify(globalScores));
-                console.log('Scores saved to localStorage:', globalScores.length);
-            } catch(e) {
-                console.log('Could not save scores to localStorage');
-            }
-            
-            // FORCE JSONBin save for global leaderboard
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.open('PUT', 'https://api.jsonbin.io/v3/b/68b08a1fd0ea881f40696e32', true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('X-Access-Key', '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O');
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            console.log('✅ GLOBAL LEADERBOARD UPDATED!');
-                            document.getElementById('syncStatus').textContent = '🌍 Global';
-                        } else {
-                            console.log('⚠️ Could not update global leaderboard');
-                            document.getElementById('syncStatus').textContent = '📱 Local';
-                        }
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        console.log('✅ Score saved securely!', response);
+                        document.getElementById('syncStatus').textContent = '🌍 Global';
+                        loadScores();
+                    } else {
+                        console.log('Using fallback');
+                        saveLocalScore(newScore);
+                        document.getElementById('syncStatus').textContent = '📱 Local';
                     }
-                };
-                xhr.onerror = function() {
-                    console.log('❌ Global sync blocked (OpenSea?)');
-                    document.getElementById('syncStatus').textContent = '📱 Local Only';
-                };
-                xhr.send(JSON.stringify(globalScores));
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.log('Network error, using fallback');
+                saveLocalScore(newScore);
+                document.getElementById('syncStatus').textContent = '📱 Local';
+            };
+            
+            xhr.send(JSON.stringify(newScore));
+        }
+        
+        function loadScores() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', API_URL, true);
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        globalScores = JSON.parse(xhr.responseText);
+                        console.log('✅ Loaded', globalScores.length, 'scores from secure proxy');
+                        document.getElementById('syncStatus').textContent = '🌍 Global';
+                    } else {
+                        loadLocalScores();
+                        document.getElementById('syncStatus').textContent = '📱 Local';
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.log('Fallback to local');
+                loadLocalScores();
+                document.getElementById('syncStatus').textContent = '📱 Local';
+            };
+            
+            xhr.send();
+        }
+        
+        function saveLocalScore(newScore) {
+            try {
+                var stored = localStorage.getItem('shackerScores');
+                var scores = stored ? JSON.parse(stored) : [];
+                scores.push(newScore);
+                scores.sort(function(a, b) {
+                    return b.score - a.score;
+                });
+                scores = scores.slice(0, 50);
+                localStorage.setItem('shackerScores', JSON.stringify(scores));
+                globalScores = scores;
             } catch(e) {
-                console.log('JSONBin blocked:', e);
-                document.getElementById('syncStatus').textContent = '📱 Local Only';
+                console.log('Could not save locally');
             }
         }
         
@@ -674,73 +659,11 @@
                 var stored = localStorage.getItem('shackerScores');
                 if (stored) {
                     globalScores = JSON.parse(stored);
-                    console.log('Loaded', globalScores.length, 'scores from localStorage');
                 } else {
-                    // Initialize with empty array if no scores
                     globalScores = [];
-                    console.log('No saved scores found, starting fresh');
                 }
             } catch(e) {
-                console.log('Could not load from localStorage');
                 globalScores = [];
-            }
-            
-            // Try to load from JSONBin too (merge scores)
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'https://api.jsonbin.io/v3/b/68b08a1fd0ea881f40696e32/latest', true);
-                xhr.setRequestHeader('X-Access-Key', '$2a$10$WLrKiYdlm2jsQ8vUCP10s.ePgcFudhnEDitHpJwKWQPh2cY0k8L1O');
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            var jsonBinScores = response.record || [];
-                            console.log('Loaded', jsonBinScores.length, 'scores from JSONBin');
-                            
-                            // Merge with local scores
-                            if (jsonBinScores.length > 0) {
-                                mergeScores(jsonBinScores);
-                            }
-                        } catch(e) {
-                            console.log('Could not parse JSONBin response');
-                        }
-                    }
-                };
-                xhr.send();
-            } catch(e) {
-                console.log('JSONBin load skipped');
-            }
-        }
-        
-        function mergeScores(jsonBinScores) {
-            // Merge JSONBin scores with local scores
-            var allScores = globalScores.concat(jsonBinScores);
-            
-            // Remove duplicates (same name and score)
-            var uniqueScores = [];
-            var seen = {};
-            
-            for (var i = 0; i < allScores.length; i++) {
-                var key = allScores[i].name + '_' + allScores[i].score;
-                if (!seen[key]) {
-                    seen[key] = true;
-                    uniqueScores.push(allScores[i]);
-                }
-            }
-            
-            // Sort and keep top 50
-            uniqueScores.sort(function(a, b) {
-                return b.score - a.score;
-            });
-            
-            globalScores = uniqueScores.slice(0, 50);
-            
-            // Save merged scores to localStorage
-            try {
-                localStorage.setItem('shackerScores', JSON.stringify(globalScores));
-                console.log('Merged scores saved:', globalScores.length);
-            } catch(e) {
-                console.log('Could not save merged scores');
             }
         }
         
@@ -765,85 +688,11 @@
             document.getElementById('scoresList').innerHTML = html || 'No scores yet';
         }
         
-        // Log for debugging
-        console.log('Shacker OpenSea Ultra Safe Version');
+        console.log('🔒 Shacker Secure Proxy Version');
+        console.log('API: ' + API_URL);
         
-        // Check if in iframe
         if (window.parent !== window) {
-            console.log('Running in iframe (OpenSea mode)');
-        }
-        
-        // Wallet connection functions
-        function connectWallet() {
-            if (typeof window.ethereum !== 'undefined') {
-                console.log('MetaMask detected!');
-                
-                // Request account access
-                window.ethereum.request({ method: 'eth_requestAccounts' })
-                    .then(function(accounts) {
-                        if (accounts.length > 0) {
-                            connectedWallet = accounts[0];
-                            console.log('Wallet connected:', connectedWallet);
-                            
-                            // Save to localStorage
-                            try {
-                                localStorage.setItem('shackerWallet', connectedWallet);
-                            } catch(e) {
-                                console.log('Could not save wallet to localStorage');
-                            }
-                            
-                            // Update UI
-                            updateWalletUI();
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log('Wallet connection error:', error);
-                        document.getElementById('walletStatus').textContent = 'Connection failed';
-                    });
-            } else {
-                // No MetaMask
-                document.getElementById('walletStatus').textContent = 'Please install MetaMask';
-                window.open('https://metamask.io/download/', '_blank');
-            }
-        }
-        
-        function checkWalletConnection() {
-            // Check localStorage first
-            try {
-                var savedWallet = localStorage.getItem('shackerWallet');
-                if (savedWallet) {
-                    connectedWallet = savedWallet;
-                    console.log('Wallet restored from localStorage:', connectedWallet);
-                    updateWalletUI();
-                }
-            } catch(e) {
-                console.log('Could not check localStorage for wallet');
-            }
-            
-            // Also check if MetaMask is connected
-            if (typeof window.ethereum !== 'undefined') {
-                window.ethereum.request({ method: 'eth_accounts' })
-                    .then(function(accounts) {
-                        if (accounts.length > 0 && !connectedWallet) {
-                            connectedWallet = accounts[0];
-                            updateWalletUI();
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log('Could not check wallet:', error);
-                    });
-            }
-        }
-        
-        function updateWalletUI() {
-            if (connectedWallet) {
-                var shortAddress = connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38);
-                document.getElementById('walletBtn').textContent = '✅ ' + shortAddress;
-                document.getElementById('walletBtn').style.background = 'rgba(0, 255, 0, 0.2)';
-                document.getElementById('walletBtn').style.borderColor = '#00ff00';
-                document.getElementById('walletStatus').textContent = 'Wallet linked to your scores!';
-                document.getElementById('walletStatus').style.color = '#00ff00';
-            }
+            console.log('Running in iframe (OpenSea compatible with secure proxy)');
         }
     </script>
 </body>
