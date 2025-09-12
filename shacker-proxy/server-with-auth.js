@@ -511,21 +511,12 @@ app.post('/wallet/link', authenticateToken, async (req, res) => {
             return res.status(401).json({ error: 'Invalid signature - you do not own this wallet!' });
         }
         
-        // Check if wallet already linked to another account
-        const { data: existingUser } = await supabase
-            .from('users')
-            .select('id, username')
-            .eq('wallet_address', wallet_address)
-            .single();
+        // Remove duplicate check (already done above with proper case handling)
         
-        if (existingUser && existingUser.id !== req.user.id) {
-            return res.status(400).json({ error: 'Wallet already linked to another account' });
-        }
-        
-        // Update user with wallet address
+        // Update user with wallet address (normalize to lowercase)
         const { data: updatedUser, error } = await supabase
             .from('users')
-            .update({ wallet_address })
+            .update({ wallet_address: wallet_address.toLowerCase() })
             .eq('id', req.user.id)
             .select()
             .single();
@@ -632,10 +623,10 @@ app.post('/wallet/link-session', async (req, res) => {
             return res.status(401).json({ error: 'Invalid signature' });
         }
         
-        // Update user with wallet
+        // Update user with wallet (normalize to lowercase)
         const { data: updatedUser, error } = await supabase
             .from('users')
-            .update({ wallet_address: walletAddress })
+            .update({ wallet_address: walletAddress.toLowerCase() })
             .eq('id', session.userId)
             .select()
             .single();
