@@ -159,6 +159,31 @@
             display: flex;
             justify-content: space-between;
         }
+        
+        /* Wallet connection styles */
+        #walletBtn {
+            padding: 10px 20px;
+            font-size: 14px;
+            background: rgba(138, 43, 226, 0.8);
+            color: white;
+            border: 1px solid #8a2be2;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        #walletBtn:hover {
+            background: #8a2be2;
+            transform: scale(1.05);
+        }
+        
+        #walletStatus {
+            font-size: 12px;
+            color: #8a2be2;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -177,6 +202,8 @@
             <h1>SHACKER</h1>
             <input type="text" id="nameInput" placeholder="Enter your name" maxlength="20">
             <button class="btn" id="startBtn">START GAME</button>
+            <button id="walletBtn">🦊 Connect Wallet (Optional)</button>
+            <div id="walletStatus"></div>
         </div>
         
         <!-- GAME OVER SCREEN -->
@@ -202,6 +229,7 @@
         var score = 0;
         var level = 1;
         var globalScores = [];
+        var connectedWallet = null;
         
         // Player
         var player = {
@@ -235,6 +263,10 @@
             // Add button click handlers
             document.getElementById('startBtn').onclick = startGame;
             document.getElementById('restartBtn').onclick = restartGame;
+            document.getElementById('walletBtn').onclick = connectWallet;
+            
+            // Check if wallet already connected
+            checkWalletConnection();
             
             // Add mouse/touch controls
             setupControls();
@@ -583,6 +615,7 @@
             var newScore = {
                 name: playerName,
                 score: score,
+                wallet: connectedWallet || null,
                 date: new Date().toISOString()
             };
             
@@ -738,6 +771,79 @@
         // Check if in iframe
         if (window.parent !== window) {
             console.log('Running in iframe (OpenSea mode)');
+        }
+        
+        // Wallet connection functions
+        function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                console.log('MetaMask detected!');
+                
+                // Request account access
+                window.ethereum.request({ method: 'eth_requestAccounts' })
+                    .then(function(accounts) {
+                        if (accounts.length > 0) {
+                            connectedWallet = accounts[0];
+                            console.log('Wallet connected:', connectedWallet);
+                            
+                            // Save to localStorage
+                            try {
+                                localStorage.setItem('shackerWallet', connectedWallet);
+                            } catch(e) {
+                                console.log('Could not save wallet to localStorage');
+                            }
+                            
+                            // Update UI
+                            updateWalletUI();
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('Wallet connection error:', error);
+                        document.getElementById('walletStatus').textContent = 'Connection failed';
+                    });
+            } else {
+                // No MetaMask
+                document.getElementById('walletStatus').textContent = 'Please install MetaMask';
+                window.open('https://metamask.io/download/', '_blank');
+            }
+        }
+        
+        function checkWalletConnection() {
+            // Check localStorage first
+            try {
+                var savedWallet = localStorage.getItem('shackerWallet');
+                if (savedWallet) {
+                    connectedWallet = savedWallet;
+                    console.log('Wallet restored from localStorage:', connectedWallet);
+                    updateWalletUI();
+                }
+            } catch(e) {
+                console.log('Could not check localStorage for wallet');
+            }
+            
+            // Also check if MetaMask is connected
+            if (typeof window.ethereum !== 'undefined') {
+                window.ethereum.request({ method: 'eth_accounts' })
+                    .then(function(accounts) {
+                        if (accounts.length > 0 && !connectedWallet) {
+                            connectedWallet = accounts[0];
+                            updateWalletUI();
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('Could not check wallet:', error);
+                    });
+            }
+        }
+        
+        function updateWalletUI() {
+            if (connectedWallet) {
+                var shortAddress = connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38);
+                document.getElementById('walletBtn').textContent = '✅ ' + shortAddress;
+                document.getElementById('walletBtn').style.background = 'rgba(0, 255, 0, 0.2)';
+                document.getElementById('walletBtn').style.borderColor = '#00ff00';
+                document.getElementById('walletStatus').textContent = 'Wallet linked to your scores!';
+                document.getElementById('walletStatus').style.color = '#00ff00';
+            }
         }
     </script>
 </body>
