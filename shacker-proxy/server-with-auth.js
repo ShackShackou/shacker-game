@@ -478,6 +478,18 @@ app.post('/wallet/link', authenticateToken, async (req, res) => {
     }
     
     try {
+        // CRITICAL: Check if wallet is already linked to ANOTHER account
+        const { data: existingWalletUser } = await supabase
+            .from('users')
+            .select('username, id')
+            .eq('wallet_address', wallet_address.toLowerCase())
+            .single();
+        
+        if (existingWalletUser && existingWalletUser.id !== req.user.id) {
+            return res.status(400).json({ 
+                error: `This wallet is already linked to account: ${existingWalletUser.username}. One wallet can only be linked to one account.` 
+            });
+        }
         // Extract timestamp from message for validation
         const timestampMatch = message.match(/Timestamp: (.+)/);
         if (!timestampMatch) {
@@ -600,6 +612,18 @@ app.post('/wallet/link-session', async (req, res) => {
     }
     
     try {
+        // CRITICAL: Check if wallet is already linked to ANOTHER account
+        const { data: existingWalletUser } = await supabase
+            .from('users')
+            .select('username, id')
+            .eq('wallet_address', walletAddress.toLowerCase())
+            .single();
+        
+        if (existingWalletUser && existingWalletUser.id !== session.userId) {
+            return res.status(400).json({ 
+                error: `This wallet is already linked to account: ${existingWalletUser.username}. One wallet can only be linked to one account.` 
+            });
+        }
         // Verify signature
         const { ethers } = require('ethers');
         const recoveredAddress = ethers.utils.verifyMessage(message, signature);
