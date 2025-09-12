@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shacker Game - Secure Wallet System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        
+        body {
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            color: white;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #level {
+            font-size: 18px;
+            color: #00ffcc;
+            margin-top: 5px;
+        }
+        
+        #gamesLeft {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 16px;
+            color: #ffd700;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        
+        #userInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 14px;
+            color: #00ffcc;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        
+        #userInfo button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #ff0088;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Login Screen Styles */
+        #loginScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,26,46,0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+        }
+        
+        #loginScreen h1 {
+            font-size: 60px;
+            color: #00ffcc;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        
+        .auth-form {
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #00ffcc;
+            color: white;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+        
+        .wallet-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 10px;
+            border: 1px solid #00ffcc;
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-address {
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff88;
+            word-break: break-all;
+        }
+        
+        .wallet-warning {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .wallet-success {
+            color: #51cf66;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(81, 207, 102, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #00ff88;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #888;
+        }
+        
+        .btn-wallet {
+            background: #ff9500;
+            color: white;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .btn-wallet:hover {
+            background: #ffb143;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .success-msg {
+            color: #51cf66;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .form-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #888;
+            border: 2px solid #333;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: rgba(0, 255, 204, 0.2);
+            color: #00ffcc;
+            border-color: #00ffcc;
+        }
+        
+        /* Start Screen */
+        #startScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,26,46,0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #startScreen h1 {
+            font-size: 60px;
+            color: #00ffcc;
+            margin-bottom: 20px;
+        }
+        
+        #welcomeUsername {
+            font-size: 24px;
+            color: #ffd700;
+            margin-bottom: 30px;
+        }
+        
+        /* Game Over Screen */
+        #gameOverScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #finalScore {
+            font-size: 48px;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+        
+        #leaderboard {
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            min-width: 400px;
+            max-width: 90%;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .score-entry.highlight {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="level">Level: 1</div>
+            <div id="gamesLeft">🎮 Games left: 10/10</div>
+        </div>
+        
+        <div id="userInfo" style="display: none;">
+            <span>Playing as: <strong id="usernameDisplay"></strong></span>
+            <span id="walletDisplay" style="margin-left: 10px; font-size: 12px;"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+        
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen">
+            <h1>🎮 SHACKER GAME</h1>
+            
+            <div class="auth-form">
+                <div class="form-tabs">
+                    <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                    <button class="tab-btn" onclick="switchTab('register')">Register</button>
+                </div>
+                
+                <!-- LOGIN FORM -->
+                <div id="loginForm">
+                    <input type="text" id="loginUsername" class="auth-input" placeholder="Username" />
+                    <input type="password" id="loginPassword" class="auth-input" placeholder="Password" />
+                    
+                    <div class="wallet-section">
+                        <div class="wallet-status">
+                            <span>🦊 MetaMask:</span>
+                            <span id="walletStatusLogin">Not connected</span>
+                        </div>
+                        <button class="btn btn-wallet" onclick="connectWallet('login')">Connect Wallet (Optional)</button>
+                        <div class="wallet-address" id="walletAddressLogin"></div>
+                    </div>
+                    
+                    <div class="auth-buttons">
+                        <button class="btn" onclick="login()">LOGIN</button>
+                    </div>
+                    <div class="error-msg" id="loginError"></div>
+                </div>
+                
+                <!-- REGISTER FORM -->
+                <div id="registerForm" style="display: none;">
+                    <input type="text" id="regUsername" class="auth-input" placeholder="Choose a username" />
+                    <input type="email" id="regEmail" class="auth-input" placeholder="Email address" />
+                    <input type="password" id="regPassword" class="auth-input" placeholder="Password (min 6 chars)" />
+                    
+                    <div class="wallet-section">
+                        <div class="wallet-status">
+                            <span>🦊 MetaMask:</span>
+                            <span id="walletStatusReg">Not connected</span>
+                        </div>
+                        <button class="btn btn-wallet" onclick="connectWallet('register')">Connect Wallet (Optional)</button>
+                        <div class="wallet-address" id="walletAddressReg"></div>
+                        <div class="wallet-warning" id="walletWarning"></div>
+                        <div class="wallet-success" id="walletSuccess"></div>
+                    </div>
+                    
+                    <div class="auth-buttons">
+                        <button class="btn" onclick="register()" id="registerBtn">CREATE ACCOUNT</button>
+                    </div>
+                    <div class="error-msg" id="registerError"></div>
+                    <div class="success-msg" id="registerSuccess"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- START SCREEN -->
+        <div id="startScreen">
+            <h1>🎮 SHACKER</h1>
+            <div id="welcomeUsername">Welcome!</div>
+            <button class="btn" id="startBtn" onclick="startGame()">START GAME</button>
+            <button class="btn btn-secondary" onclick="loadScores()">VIEW LEADERBOARD</button>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div id="gameOverScreen">
+            <h1 style="color: #ff0088;">GAME OVER</h1>
+            <div id="finalScore">Score: 0</div>
+            <div id="leaderboard"></div>
+            <div class="auth-buttons">
+                <button class="btn" onclick="startGame()">PLAY AGAIN</button>
+                <button class="btn btn-secondary" onclick="backToMenu()">MAIN MENU</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // CONFIG
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:10000'
+            : 'https://shacker-proxy.onrender.com';
+        
+        // AUTH VARIABLES
+        let authToken = localStorage.getItem('shackerToken');
+        let currentUsername = localStorage.getItem('shackerUsername');
+        let connectedWallet = null;
+        let gamesLeft = 10;
+        
+        // GAME VARIABLES
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameRunning = false;
+        let score = 0;
+        let level = 1;
+        let player = { x: 0, y: 0, size: 20, trail: [] };
+        let enemies = [];
+        let collectibles = [];
+        let particles = [];
+        
+        // WALLET FUNCTIONS
+        async function connectWallet(mode) {
+            if (typeof window.ethereum === 'undefined') {
+                alert('Please install MetaMask to connect your wallet!');
+                return;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                connectedWallet = accounts[0];
+                
+                if (mode === 'register') {
+                    document.getElementById('walletStatusReg').textContent = 'Connected';
+                    document.getElementById('walletAddressReg').textContent = connectedWallet;
+                    
+                    // Check if wallet is already used
+                    const response = await fetch(API_URL + '/check-wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ walletAddress: connectedWallet })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.isAvailable) {
+                        document.getElementById('walletWarning').style.display = 'block';
+                        document.getElementById('walletWarning').textContent = data.message;
+                        document.getElementById('walletSuccess').style.display = 'none';
+                        document.getElementById('registerBtn').disabled = true;
+                    } else {
+                        document.getElementById('walletSuccess').style.display = 'block';
+                        document.getElementById('walletSuccess').textContent = '✅ Wallet ready to be linked to your account';
+                        document.getElementById('walletWarning').style.display = 'none';
+                        document.getElementById('registerBtn').disabled = false;
+                    }
+                } else {
+                    document.getElementById('walletStatusLogin').textContent = 'Connected';
+                    document.getElementById('walletAddressLogin').textContent = connectedWallet;
+                }
+                
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                alert('Failed to connect wallet');
+            }
+        }
+        
+        // Listen for account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    connectedWallet = null;
+                    document.getElementById('walletStatusReg').textContent = 'Not connected';
+                    document.getElementById('walletStatusLogin').textContent = 'Not connected';
+                    document.getElementById('walletAddressReg').textContent = '';
+                    document.getElementById('walletAddressLogin').textContent = '';
+                } else if (accounts[0] !== connectedWallet) {
+                    connectedWallet = accounts[0];
+                    connectWallet(document.getElementById('loginForm').style.display === 'none' ? 'register' : 'login');
+                }
+            });
+        }
+        
+        function switchTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.querySelectorAll('.tab-btn')[1].classList.remove('active');
+            } else {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            }
+        }
+        
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+        }
+        
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                document.getElementById('loginError').textContent = 'Please fill all fields';
+                return;
+            }
+            
+            const loginData = { username, password };
+            if (connectedWallet) {
+                loginData.walletAddress = connectedWallet;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    currentUsername = data.username;
+                    gamesLeft = data.gamesLeft;
+                    
+                    localStorage.setItem('shackerToken', authToken);
+                    localStorage.setItem('shackerUsername', currentUsername);
+                    
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'flex';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('usernameDisplay').textContent = currentUsername;
+                    document.getElementById('welcomeUsername').textContent = `Welcome, ${currentUsername}!`;
+                    
+                    if (connectedWallet) {
+                        document.getElementById('walletDisplay').textContent = `🦊 ${connectedWallet.slice(0,6)}...${connectedWallet.slice(-4)}`;
+                    }
+                    
+                    updateGamesLeftDisplay();
+                    loadScores();
+                } else {
+                    document.getElementById('loginError').textContent = data.error || 'Login failed';
+                }
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Connection error';
+                console.error('Login error:', error);
+            }
+        }
+        
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            if (!username || !email || !password) {
+                document.getElementById('registerError').textContent = 'Please fill all fields';
+                return;
+            }
+            
+            if (password.length < 6) {
+                document.getElementById('registerError').textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            const registerData = { username, email, password };
+            if (connectedWallet) {
+                registerData.walletAddress = connectedWallet;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(registerData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    currentUsername = data.username;
+                    gamesLeft = data.gamesLeft;
+                    
+                    localStorage.setItem('shackerToken', authToken);
+                    localStorage.setItem('shackerUsername', currentUsername);
+                    
+                    document.getElementById('registerSuccess').textContent = 'Account created! Welcome!';
+                    
+                    setTimeout(() => {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('startScreen').style.display = 'flex';
+                        document.getElementById('userInfo').style.display = 'block';
+                        document.getElementById('usernameDisplay').textContent = currentUsername;
+                        document.getElementById('welcomeUsername').textContent = `Welcome, ${currentUsername}!`;
+                        
+                        if (connectedWallet) {
+                            document.getElementById('walletDisplay').textContent = `🦊 ${connectedWallet.slice(0,6)}...${connectedWallet.slice(-4)}`;
+                        }
+                        
+                        updateGamesLeftDisplay();
+                    }, 1500);
+                } else {
+                    document.getElementById('registerError').textContent = data.error || 'Registration failed';
+                }
+            } catch (error) {
+                document.getElementById('registerError').textContent = 'Connection error';
+                console.error('Register error:', error);
+            }
+        }
+        
+        async function checkAuth() {
+            if (!authToken) {
+                showLoginScreen();
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/can-play', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                
+                const data = await response.json();
+                
+                if (data.canPlay !== undefined) {
+                    gamesLeft = data.gamesLeft;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'flex';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('usernameDisplay').textContent = currentUsername;
+                    document.getElementById('welcomeUsername').textContent = `Welcome, ${currentUsername}!`;
+                    updateGamesLeftDisplay();
+                    
+                    if (!data.canPlay) {
+                        document.getElementById('startBtn').disabled = true;
+                        document.getElementById('startBtn').textContent = 'NO GAMES LEFT TODAY';
+                    }
+                    
+                    loadScores();
+                } else {
+                    showLoginScreen();
+                }
+            } catch {
+                showLoginScreen();
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('shackerToken');
+            localStorage.removeItem('shackerUsername');
+            authToken = null;
+            currentUsername = null;
+            connectedWallet = null;
+            showLoginScreen();
+        }
+        
+        function updateGamesLeftDisplay() {
+            document.getElementById('gamesLeft').textContent = `🎮 Games left: ${gamesLeft}/10`;
+        }
+        
+        // GAME FUNCTIONS
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        function startGame() {
+            if (gamesLeft <= 0) {
+                alert('No games left today! Come back tomorrow!');
+                return;
+            }
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            score = 0;
+            level = 1;
+            enemies = [];
+            collectibles = [];
+            particles = [];
+            player.trail = [];
+            
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            
+            for (let i = 0; i < 5; i++) {
+                spawnEnemy();
+            }
+            
+            for (let j = 0; j < 3; j++) {
+                spawnCollectible();
+            }
+            
+            gameRunning = true;
+            gameLoop();
+        }
+        
+        function spawnEnemy() {
+            const side = Math.floor(Math.random() * 4);
+            const enemy = {
+                x: 0, y: 0, vx: 0, vy: 0,
+                size: 15 + Math.random() * 20,
+                color: `hsl(${Math.floor(Math.random() * 60)}, 100%, 50%)`
+            };
+            
+            const speed = (1 + level * 0.2);
+            
+            if (side === 0) {
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = 0;
+                enemy.vx = (Math.random() - 0.5) * 2 * speed;
+                enemy.vy = (Math.random() * 2 + 1) * speed;
+            } else if (side === 1) {
+                enemy.x = canvas.width;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = -(Math.random() * 2 + 1) * speed;
+                enemy.vy = (Math.random() - 0.5) * 2 * speed;
+            } else if (side === 2) {
+                enemy.x = Math.random() * canvas.width;
+                enemy.y = canvas.height;
+                enemy.vx = (Math.random() - 0.5) * 2 * speed;
+                enemy.vy = -(Math.random() * 2 + 1) * speed;
+            } else {
+                enemy.x = 0;
+                enemy.y = Math.random() * canvas.height;
+                enemy.vx = (Math.random() * 2 + 1) * speed;
+                enemy.vy = (Math.random() - 0.5) * 2 * speed;
+            }
+            
+            enemies.push(enemy);
+        }
+        
+        function spawnCollectible() {
+            collectibles.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * (canvas.height - 40) + 20,
+                size: 10,
+                collected: false
+            });
+        }
+        
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    size: Math.random() * 5 + 2,
+                    color: color,
+                    life: 1
+                });
+            }
+        }
+        
+        function updateGame() {
+            if (!gameRunning) return;
+            
+            // Update player trail
+            player.trail.push({ x: player.x, y: player.y });
+            if (player.trail.length > 20) {
+                player.trail.shift();
+            }
+            
+            // Update enemies
+            enemies.forEach(enemy => {
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+                
+                // Check collision with player
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < enemy.size + player.size) {
+                    endGame();
+                }
+            });
+            
+            // Remove off-screen enemies
+            enemies = enemies.filter(enemy => 
+                enemy.x > -50 && enemy.x < canvas.width + 50 &&
+                enemy.y > -50 && enemy.y < canvas.height + 50
+            );
+            
+            // Check collectibles
+            collectibles.forEach((item, index) => {
+                if (!item.collected) {
+                    const dx = item.x - player.x;
+                    const dy = item.y - player.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < item.size + player.size) {
+                        item.collected = true;
+                        score += 10;
+                        createParticles(item.x, item.y, '#00ffcc');
+                        
+                        // Spawn new collectible
+                        setTimeout(() => {
+                            collectibles[index] = {
+                                x: Math.random() * (canvas.width - 40) + 20,
+                                y: Math.random() * (canvas.height - 40) + 20,
+                                size: 10,
+                                collected: false
+                            };
+                        }, 500);
+                        
+                        // Level up
+                        if (score % 50 === 0) {
+                            level++;
+                            for (let i = 0; i < 2; i++) {
+                                spawnEnemy();
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update particles
+            particles.forEach(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+                particle.life -= 0.02;
+            });
+            
+            particles = particles.filter(p => p.life > 0);
+            
+            // Spawn new enemies
+            if (Math.random() < 0.02 * level) {
+                spawnEnemy();
+            }
+            
+            // Update UI
+            document.getElementById('score').textContent = `Score: ${score}`;
+            document.getElementById('level').textContent = `Level: ${level}`;
+        }
+        
+        function drawGame() {
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw particles
+            particles.forEach(particle => {
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            
+            // Draw player trail
+            player.trail.forEach((point, index) => {
+                ctx.fillStyle = `rgba(0, 255, 204, ${index / player.trail.length * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, player.size * (index / player.trail.length), 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw player
+            ctx.fillStyle = '#00ffcc';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw enemies
+            enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw collectibles
+            collectibles.forEach(item => {
+                if (!item.collected) {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.beginPath();
+                    ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            updateGame();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        async function endGame() {
+            gameRunning = false;
+            gamesLeft--;
+            updateGamesLeftDisplay();
+            
+            // Save score
+            try {
+                await fetch(API_URL + '/scores', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({
+                        username: currentUsername,
+                        score: score,
+                        level: level
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save score:', error);
+            }
+            
+            // Show game over
+            document.getElementById('finalScore').textContent = `Score: ${score}`;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            loadScores(true);
+        }
+        
+        async function loadScores(isGameOver = false) {
+            try {
+                const response = await fetch(API_URL + '/scores');
+                const scores = await response.json();
+                
+                const leaderboard = document.getElementById('leaderboard');
+                leaderboard.innerHTML = '<h2 style="color: #00ffcc; margin-bottom: 20px;">LEADERBOARD</h2>';
+                
+                scores.slice(0, 10).forEach((entry, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'score-entry';
+                    if (entry.username === currentUsername && isGameOver) {
+                        div.classList.add('highlight');
+                    }
+                    div.innerHTML = `
+                        <span>${index + 1}. ${entry.username}</span>
+                        <span>${entry.score}</span>
+                    `;
+                    leaderboard.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Failed to load scores:', error);
+            }
+        }
+        
+        function backToMenu() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            
+            if (gamesLeft <= 0) {
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('startBtn').textContent = 'NO GAMES LEFT TODAY';
+            }
+        }
+        
+        // Setup controls
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameRunning) {
+                const rect = canvas.getBoundingClientRect();
+                player.x = e.clientX - rect.left;
+                player.y = e.clientY - rect.top;
+            }
+        });
+        
+        // Touch controls for mobile
+        canvas.addEventListener('touchmove', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                player.x = touch.clientX - rect.left;
+                player.y = touch.clientY - rect.top;
+            }
+        });
+        
+        // Initialize
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        checkAuth();
+    </script>
+</body>
+</html>
