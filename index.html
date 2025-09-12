@@ -994,10 +994,31 @@
         }
         
         function logout() {
+            // Clear all auth data
             storage.removeItem('shackerToken');
             storage.removeItem('shackerUsername');
+            storage.removeItem('walletAddress'); // Clear wallet cache
             authToken = null;
             currentUsername = null;
+            gamesLeft = 0;
+            
+            // Clear MetaMask connection if exists
+            if (window.ethereum) {
+                // Clear cached permissions
+                window.ethereum._metamask = null;
+                // Some wallets support disconnect
+                if (window.ethereum.disconnect) {
+                    window.ethereum.disconnect();
+                }
+            }
+            
+            // Reset wallet UI
+            document.getElementById('walletNotLinkedInfo').style.display = 'none';
+            document.getElementById('walletLinkedInfo').style.display = 'none';
+            if (document.getElementById('walletBadge')) {
+                document.getElementById('walletBadge').classList.remove('active');
+            }
+            
             showLoginScreen();
         }
         
